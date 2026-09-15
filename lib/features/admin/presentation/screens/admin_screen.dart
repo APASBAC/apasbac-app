@@ -1,3 +1,6 @@
+import '../../../../core/widgets/apasbac_loading.dart';
+import '../../../../core/theme/semantic_colors.dart';
+import '../../../../core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -26,20 +29,9 @@ class AdminScreen extends ConsumerWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Administração'),
-          actions: [
-            PopupMenuButton<String>(
-              tooltip: 'Adicionar',
-              icon: const Icon(Icons.add),
-              onSelected: (value) => context.push('/home/admin/$value'),
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'animal/new', child: Text('Novo animal')),
-                PopupMenuItem(
-                    value: 'monitoring/new', child: Text('Novo monitoramento')),
-              ],
-            ),
-          ],
           bottom: const TabBar(
             isScrollable: true,
+            tabAlignment: TabAlignment.start,
             tabs: [
               Tab(icon: Icon(Icons.fact_check_outlined), text: 'Validações'),
               Tab(
@@ -52,8 +44,14 @@ class AdminScreen extends ConsumerWidget {
         ),
         body: const TabBarView(
           children: [
-            _MonitoringReviewTab(),
-            _AdoptionsTab(),
+            _CreationTab(
+                label: 'Criar monitoramento',
+                route: '/home/admin/monitoring/new',
+                child: _MonitoringReviewTab()),
+            _CreationTab(
+                label: 'Cadastrar animal',
+                route: '/home/admin/animal/new',
+                child: _AdoptionsTab()),
             _UsersTab(),
             ConfigsTab(),
           ],
@@ -61,6 +59,26 @@ class AdminScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+class _CreationTab extends StatelessWidget {
+  final String label, route;
+  final Widget child;
+  const _CreationTab(
+      {required this.label, required this.route, required this.child});
+  @override
+  Widget build(BuildContext context) => Column(children: [
+        Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton.icon(
+                  onPressed: () => context.push(route),
+                  icon: const Icon(Icons.add),
+                  label: Text(label)),
+            )),
+        Expanded(child: child),
+      ]);
 }
 
 class _MonitoringReviewTab extends ConsumerWidget {
@@ -71,7 +89,7 @@ class _MonitoringReviewTab extends ConsumerWidget {
     final monitoringsAsync = ref.watch(myMonitoringsProvider);
 
     return monitoringsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const ApasbacLoading(),
       error: (err, _) => _ErrorView(
         message: err.toString(),
         onRetry: () => ref.invalidate(myMonitoringsProvider),
@@ -112,11 +130,11 @@ class _MonitoringReviewCardState extends ConsumerState<_MonitoringReviewCard> {
   @override
   Widget build(BuildContext context) {
     final statusColor = switch (monitoring.status) {
-      'PENDING' => Colors.orange,
-      'IN_REVIEW' => Colors.blue,
-      'APPROVED' => Colors.green,
-      'REJECTED' => Colors.red,
-      _ => Colors.grey,
+      'PENDING' => SemanticColors.pending,
+      'IN_REVIEW' => SemanticColors.review,
+      'APPROVED' => SemanticColors.approved,
+      'REJECTED' => SemanticColors.rejected,
+      _ => AppColors.muted,
     };
 
     return Card(
@@ -157,7 +175,9 @@ class _MonitoringReviewCardState extends ConsumerState<_MonitoringReviewCard> {
               ),
             ),
             const SizedBox(height: 12),
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 OutlinedButton.icon(
                   onPressed: () =>
@@ -165,17 +185,16 @@ class _MonitoringReviewCardState extends ConsumerState<_MonitoringReviewCard> {
                   icon: const Icon(Icons.visibility_outlined),
                   label: const Text('Ver mídias'),
                 ),
-                const Spacer(),
                 if (monitoring.isUnderReview) ...[
-                  IconButton.filledTonal(
-                    tooltip: 'Rejeitar',
+                  OutlinedButton.icon(
+                    label: const Text('Rejeitar'),
                     onPressed:
                         _reviewing ? null : () => _review(context, ref, false),
                     icon: const Icon(Icons.close_rounded),
                   ),
                   const SizedBox(width: 8),
-                  IconButton.filled(
-                    tooltip: 'Aprovar',
+                  FilledButton.icon(
+                    label: const Text('Aprovar'),
                     onPressed:
                         _reviewing ? null : () => _review(context, ref, true),
                     icon: const Icon(Icons.check_rounded),
@@ -238,7 +257,7 @@ class _AdoptionsTab extends ConsumerWidget {
     final usersAsync = ref.watch(adminUsersProvider);
 
     return animalsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const ApasbacLoading(),
       error: (err, _) => _ErrorView(
         message: err.toString(),
         onRetry: () => ref.invalidate(adminAnimalsProvider),
@@ -251,7 +270,7 @@ class _AdoptionsTab extends ConsumerWidget {
         }
 
         return usersAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const ApasbacLoading(),
           error: (err, _) => _ErrorView(
             message: err.toString(),
             onRetry: () => ref.invalidate(adminUsersProvider),
@@ -343,7 +362,7 @@ class _UsersTab extends ConsumerWidget {
     final usersAsync = ref.watch(adminUsersProvider);
 
     return usersAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const ApasbacLoading(),
       error: (err, _) => _ErrorView(
         message: err.toString(),
         onRetry: () => ref.invalidate(adminUsersProvider),
@@ -383,31 +402,37 @@ class _UserRoleTile extends ConsumerWidget {
         ),
         title: Text(user.fullName),
         subtitle: Text(user.email),
-        trailing: DropdownButton<String>(
-          value: roles.contains(user.role) ? user.role : 'USER',
-          items: roles
-              .map((role) => DropdownMenuItem(value: role, child: Text(role)))
-              .toList(),
-          onChanged: (role) async {
-            if (role == null || role == user.role) return;
-            try {
-              await ref.read(userServiceProvider).updateRole(user.id, role);
-              ref.invalidate(adminUsersProvider);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text('Cargo de ${user.fullName} atualizado.')),
-                );
-              }
-            } catch (e) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Erro ao mudar cargo: $e')),
-                );
-              }
-            }
-          },
-        ),
+        trailing: ref.watch(authProvider).valueOrNull?.role != 'ADMIN'
+            ? RoleBadge(role: user.role)
+            : DropdownButton<String>(
+                value: roles.contains(user.role) ? user.role : 'USER',
+                items: roles
+                    .map((role) => DropdownMenuItem(
+                        value: role, child: RoleBadge(role: role)))
+                    .toList(),
+                onChanged: (role) async {
+                  if (role == null || role == user.role) return;
+                  try {
+                    await ref
+                        .read(userServiceProvider)
+                        .updateRole(user.id, role);
+                    ref.invalidate(adminUsersProvider);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content:
+                                Text('Cargo de ${user.fullName} atualizado.')),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Erro ao mudar cargo: $e')),
+                      );
+                    }
+                  }
+                },
+              ),
       ),
     );
   }
@@ -443,7 +468,8 @@ class _UserPicker extends StatelessWidget {
                 : '?'),
           ),
           title: Text(user.fullName),
-          subtitle: Text('${user.email} • ${user.role}'),
+          subtitle:
+              Text('${user.email} • ${SemanticColors.roleLabel(user.role)}'),
           onTap: () => Navigator.of(context).pop(user),
         );
       },
@@ -498,7 +524,7 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const Icon(Icons.error_outline, size: 48, color: AppColors.red),
             const SizedBox(height: 12),
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 12),

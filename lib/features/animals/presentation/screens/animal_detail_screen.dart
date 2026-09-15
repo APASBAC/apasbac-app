@@ -1,3 +1,5 @@
+import '../../../../core/widgets/apasbac_loading.dart';
+import '../../../../core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -14,7 +16,7 @@ class AnimalDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       body: animalAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const ApasbacLoading(),
         error: (err, _) => Scaffold(
           appBar: AppBar(),
           body: Center(child: Text('Erro: $err')),
@@ -54,14 +56,17 @@ class _AnimalDetailViewState extends State<_AnimalDetailView> {
                       children: [
                         PageView.builder(
                           itemCount: animal.photos.length,
-                          onPageChanged: (i) => setState(() => _currentPhoto = i),
+                          onPageChanged: (i) =>
+                              setState(() => _currentPhoto = i),
                           itemBuilder: (_, i) => CachedNetworkImage(
                             imageUrl: animal.photos[i].url,
                             fit: BoxFit.cover,
-                            placeholder: (_, __) => Container(color: cs.surfaceVariant),
+                            placeholder: (_, __) =>
+                                Container(color: cs.surfaceVariant),
                             errorWidget: (_, __, ___) => Container(
                               color: cs.surfaceVariant,
-                              child: const Icon(Icons.pets, size: 80, color: Colors.grey),
+                              child: const Icon(Icons.pets,
+                                  size: 80, color: AppColors.muted),
                             ),
                           ),
                         ),
@@ -76,13 +81,14 @@ class _AnimalDetailViewState extends State<_AnimalDetailView> {
                                 animal.photos.length,
                                 (i) => AnimatedContainer(
                                   duration: const Duration(milliseconds: 200),
-                                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                                  margin:
+                                      const EdgeInsets.symmetric(horizontal: 3),
                                   width: i == _currentPhoto ? 18 : 8,
                                   height: 8,
                                   decoration: BoxDecoration(
                                     color: i == _currentPhoto
-                                        ? Colors.white
-                                        : Colors.white54,
+                                        ? AppColors.cream
+                                        : Color(0x99FFF3D4),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                 ),
@@ -93,7 +99,8 @@ class _AnimalDetailViewState extends State<_AnimalDetailView> {
                     )
                   : Container(
                       color: cs.surfaceVariant,
-                      child: const Icon(Icons.pets, size: 80, color: Colors.grey),
+                      child: const Icon(Icons.pets,
+                          size: 80, color: AppColors.muted),
                     ),
             ),
           ),
@@ -119,7 +126,7 @@ class _AnimalDetailViewState extends State<_AnimalDetailView> {
                       ),
                       _StatusChip(
                         label: animal.isAdopted ? 'Adotado' : 'Disponível',
-                        color: animal.isAdopted ? Colors.green : Colors.orange,
+                        color: animal.isAdopted ? AppColors.red : AppColors.red,
                       ),
                     ],
                   ),
@@ -135,13 +142,19 @@ class _AnimalDetailViewState extends State<_AnimalDetailView> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _InfoChip(icon: Icons.male, label: animal.sexLabel, color: cs.primary),
-                      _InfoChip(icon: Icons.straighten, label: animal.sizeLabel, color: cs.secondary),
+                      _InfoChip(
+                          icon: Icons.male,
+                          label: animal.sexLabel,
+                          color: cs.primary),
+                      _InfoChip(
+                          icon: Icons.straighten,
+                          label: animal.sizeLabel,
+                          color: cs.secondary),
                       if (animal.escapeTendency)
                         _InfoChip(
                           icon: Icons.warning_amber_rounded,
                           label: 'Foge com facilidade',
-                          color: Colors.orange,
+                          color: AppColors.red,
                         ),
                     ],
                   ),
@@ -172,7 +185,8 @@ class _AnimalDetailViewState extends State<_AnimalDetailView> {
                             children: animal.vaccines
                                 .map((v) => Chip(
                                       label: Text(v),
-                                      avatar: const Icon(Icons.vaccines, size: 16),
+                                      avatar:
+                                          const Icon(Icons.vaccines, size: 16),
                                       visualDensity: VisualDensity.compact,
                                     ))
                                 .toList(),
@@ -212,7 +226,8 @@ class _InfoChip extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
-  const _InfoChip({required this.icon, required this.label, required this.color});
+  const _InfoChip(
+      {required this.icon, required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -228,7 +243,9 @@ class _InfoChip extends StatelessWidget {
         children: [
           Icon(icon, size: 16, color: color),
           const SizedBox(width: 6),
-          Text(label, style: TextStyle(fontSize: 13, color: color, fontWeight: FontWeight.w500)),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 13, color: color, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -250,7 +267,8 @@ class _StatusChip extends StatelessWidget {
         border: Border.all(color: color.withOpacity(0.4)),
       ),
       child: Text(label,
-          style: TextStyle(fontSize: 13, color: color, fontWeight: FontWeight.bold)),
+          style: TextStyle(
+              fontSize: 13, color: color, fontWeight: FontWeight.bold)),
     );
   }
 }

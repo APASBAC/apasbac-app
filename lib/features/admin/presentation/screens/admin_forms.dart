@@ -1,3 +1,4 @@
+import '../../../../core/widgets/apasbac_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -12,40 +13,131 @@ final configsProvider = FutureProvider((ref) async {
   return ConfigService().getConfigs();
 });
 
+String configTitle(Map<String, dynamic> config) => switch (config['key']) {
+      'monitoring_period_value' => 'Intervalo entre monitoramentos',
+      'monitoring_period_unit' => 'Unidade do intervalo',
+      'apasbac_email' => 'E-mail de contato',
+      'apasbac_phone' => 'Telefone de contato',
+      _ => (config['description'] as String?)?.trim().isNotEmpty == true
+          ? config['description'] as String
+          : (config['key'] as String).replaceAll('_', ' '),
+    };
+
+String configValue(Map<String, dynamic> config) {
+  final value = config['value']?.toString() ?? '';
+  if (value.isEmpty) return 'Não informado';
+  if (config['key'] == 'monitoring_period_unit') {
+    return const {
+          'DAYS': 'Dias',
+          'WEEKS': 'Semanas',
+          'MONTHS': 'Meses',
+          'YEARS': 'Anos'
+        }[value] ??
+        value;
+  }
+  return value;
+}
+
 class ConfigsTab extends ConsumerWidget {
   const ConfigsTab({super.key});
   @override
-  Widget build(BuildContext context, WidgetRef ref) =>
-      ref.watch(configsProvider).when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(
-                child: TextButton(
-                    onPressed: () => ref.invalidate(configsProvider),
-                    child: Text('Erro ao carregar. Tentar novamente: $e'))),
-            data: (configs) => RefreshIndicator(
-                onRefresh: () async {
-                  ref.invalidate(configsProvider);
-                  await ref.read(configsProvider.future);
-                },
-                child: ListView(padding: const EdgeInsets.all(16), children: [
-                  for (final config in configs)
-                    Card(
-                        child: ListTile(
-                      title: Text(config['description'] as String? ??
-                          config['key'] as String),
-                      subtitle: Text((config['value'] as String).isEmpty
-                          ? 'Não informado'
-                          : config['value'] as String),
-                      trailing: const Icon(Icons.edit_outlined),
-                      onTap: () async {
-                        await showDialog<void>(
-                            context: context,
-                            builder: (_) => _ConfigDialog(config: config));
-                        ref.invalidate(configsProvider);
-                      },
-                    )),
-                ])),
+  Widget build(BuildContext context, WidgetRef ref) => ref
+      .watch(configsProvider)
+      .when(
+        loading: () => const ApasbacLoading(),
+        error: (e, _) => Center(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Text('Não foi possível carregar as configurações.'),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+              onPressed: () => ref.invalidate(configsProvider),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Tentar novamente')),
+        ])),
+        data: (configs) {
+          final groups = <String, List<Map<String, dynamic>>>{
+            'Acompanhamento dos animais': [],
+            'Contato da APASBAC': [],
+            'Outras configurações': [],
+          };
+          for (final config in configs) {
+            final key = config['key'] as String;
+            groups[key.startsWith('monitoring_')
+                    ? 'Acompanhamento dos animais'
+                    : ['apasbac_email', 'apasbac_phone'].contains(key)
+                        ? 'Contato da APASBAC'
+                        : 'Outras configurações']!
+                .add(config);
+          }
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(configsProvider);
+              await ref.read(configsProvider.future);
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(20, 28, 20, 40),
+              children: [
+                Text('Configurações',
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 8),
+                const Text(
+                    'Ajuste o acompanhamento e os canais de contato. Toque em uma opção para editar.'),
+                const SizedBox(height: 28),
+                if (configs.isEmpty)
+                  const Text('Nenhuma configuração disponível.'),
+                for (final group
+                    in groups.entries.where((g) => g.value.isNotEmpty)) ...[
+                  Text(group.key,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 6),
+                  Text(group.key == 'Acompanhamento dos animais'
+                      ? 'Defina a frequência dos relatórios de acompanhamento.'
+                      : group.key == 'Contato da APASBAC'
+                          ? 'Mantenha os contatos da associação atualizados.'
+                          : 'Ajustes adicionais do aplicativo.'),
+                  const SizedBox(height: 14),
+                  Card(
+                      child: Column(children: [
+                    for (var i = 0; i < group.value.length; i++) ...[
+                      if (i > 0) const Divider(),
+                      ListTile(
+                        title: Text(configTitle(group.value[i])),
+                        subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(configValue(group.value[i]))),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () async {
+                          final saved = await showDialog<bool>(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (_) =>
+                                  _ConfigDialog(config: group.value[i]));
+                          if (saved == true) {
+                            ref.invalidate(configsProvider);
+                            if (context.mounted)
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content:
+                                          Text('Configuração atualizada.')));
+                          }
+                        },
+                      ),
+                    ],
+                  ])),
+                  const SizedBox(height: 28),
+                ],
+              ],
+            ),
           );
+        },
+      );
 }
 
 class _ConfigDialog extends StatefulWidget {
@@ -76,7 +168,7 @@ class _ConfigDialogState extends State<_ConfigDialog> {
     return PopScope(
         canPop: !saving,
         child: AlertDialog(
-          title: const Text('Editar configuração'),
+          title: Text(configTitle(widget.config)),
           content: Form(
               key: form,
               child: SingleChildScrollView(
@@ -97,15 +189,32 @@ class _ConfigDialogState extends State<_ConfigDialog> {
                   TextFormField(
                       controller: value,
                       enabled: !saving,
-                      decoration: const InputDecoration(labelText: 'Valor'),
+                      decoration: InputDecoration(
+                          labelText: configTitle(widget.config)),
                       keyboardType: key == 'monitoring_period_value'
                           ? TextInputType.number
-                          : TextInputType.text,
+                          : key == 'apasbac_email'
+                              ? TextInputType.emailAddress
+                              : key == 'apasbac_phone'
+                                  ? TextInputType.phone
+                                  : TextInputType.text,
                       validator: (v) => ConfigService.validate(key, v!.trim())),
-                TextFormField(
-                    controller: description,
-                    enabled: !saving,
-                    decoration: const InputDecoration(labelText: 'Descrição')),
+                const SizedBox(height: 16),
+                ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  title: const Text('Descrição da configuração'),
+                  subtitle: const Text('Opcional'),
+                  children: [
+                    TextFormField(
+                      controller: description,
+                      enabled: !saving,
+                      decoration: const InputDecoration(labelText: 'Descrição'),
+                      minLines: 2,
+                      maxLines: 4,
+                    ),
+                    const SizedBox(height: 12)
+                  ],
+                ),
                 if (error != null)
                   Text(error!,
                       style: TextStyle(
@@ -127,7 +236,7 @@ class _ConfigDialogState extends State<_ConfigDialog> {
                         try {
                           await ConfigService()
                               .update(key, value.text, description.text);
-                          if (context.mounted) Navigator.pop(context);
+                          if (context.mounted) Navigator.pop(context, true);
                         } catch (e) {
                           if (mounted) {
                             setState(
@@ -137,7 +246,7 @@ class _ConfigDialogState extends State<_ConfigDialog> {
                           if (mounted) setState(() => saving = false);
                         }
                       },
-                child: Text(saving ? 'Salvando...' : 'Salvar'))
+                child: Text(saving ? 'Salvando...' : 'Salvar alteração'))
           ],
         ));
   }
@@ -193,6 +302,7 @@ class _AnimalCreateState extends ConsumerState<AnimalCreateScreen> {
                               ? 'Campo obrigatório'
                               : null,
                     )),
+              const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                   initialValue: sex,
                   decoration: const InputDecoration(labelText: 'Sexo'),
@@ -201,6 +311,7 @@ class _AnimalCreateState extends ConsumerState<AnimalCreateScreen> {
                     DropdownMenuItem(value: 'FEMALE', child: Text('Fêmea'))
                   ],
                   onChanged: saving ? null : (v) => setState(() => sex = v!)),
+              const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                   initialValue: size,
                   decoration: const InputDecoration(labelText: 'Porte'),
@@ -249,6 +360,7 @@ class _AnimalCreateState extends ConsumerState<AnimalCreateScreen> {
                 Text(error!,
                     style:
                         TextStyle(color: Theme.of(context).colorScheme.error)),
+              const SizedBox(height: 20),
               FilledButton(
                   onPressed: saving ? null : _save,
                   child: Text(saving ? 'Salvando...' : 'Cadastrar animal')),
@@ -321,7 +433,7 @@ class _MonitoringCreateState extends ConsumerState<MonitoringCreateScreen> {
       child: Scaffold(
         appBar: AppBar(title: const Text('Novo monitoramento')),
         body: ref.watch(adminAnimalsProvider).when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const ApasbacLoading(),
               error: (e, _) => Center(
                   child: TextButton(
                       onPressed: () => ref.invalidate(adminAnimalsProvider),
@@ -361,6 +473,7 @@ class _MonitoringCreateState extends ConsumerState<MonitoringCreateScreen> {
                     Text(error!,
                         style: TextStyle(
                             color: Theme.of(context).colorScheme.error)),
+                  const SizedBox(height: 20),
                   FilledButton(
                       onPressed: saving || animalId == null
                           ? null

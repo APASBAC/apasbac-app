@@ -1,3 +1,5 @@
+import '../../../../core/theme/semantic_colors.dart';
+import '../../../../core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -102,7 +104,7 @@ class _MonitoringSubmitScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Relatório enviado com sucesso!'),
-            backgroundColor: Colors.green,
+            backgroundColor: SemanticColors.approved,
           ),
         );
         context.pop();
@@ -207,8 +209,8 @@ class _MonitoringSubmitScreenState
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: _images.length < _maxImages
-                        ? Colors.red.shade700
-                        : Colors.green.shade700,
+                        ? AppColors.muted
+                        : AppColors.muted,
                   ),
                 ),
               ],
@@ -274,7 +276,7 @@ class _MonitoringSubmitScreenState
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
+                            strokeWidth: 2, color: AppColors.cream),
                       )
                     : const Icon(Icons.send_rounded),
                 label: Text(
@@ -314,20 +316,19 @@ class _PickerPlaceholder extends StatelessWidget {
         width: double.infinity,
         height: 100,
         decoration: BoxDecoration(
-          color: Colors.grey.shade100,
+          color: AppColors.soft,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Colors.grey.shade300,
+            color: AppColors.soft,
             style: BorderStyle.solid,
           ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 32, color: Colors.grey.shade400),
+            Icon(icon, size: 32, color: AppColors.muted),
             const SizedBox(height: 6),
-            Text(label,
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+            Text(label, style: TextStyle(color: AppColors.muted, fontSize: 13)),
           ],
         ),
       ),
@@ -349,9 +350,9 @@ class _VideoPreviewTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: AppColors.soft,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: AppColors.soft),
       ),
       child: Row(
         children: [
@@ -363,7 +364,7 @@ class _VideoPreviewTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(Icons.play_circle_fill_rounded,
-                color: Colors.white, size: 28),
+                color: AppColors.cream, size: 28),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -376,15 +377,14 @@ class _VideoPreviewTile extends StatelessWidget {
                     style: const TextStyle(
                         fontWeight: FontWeight.w500, fontSize: 13)),
                 Text(sizeLabel,
-                    style:
-                        TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                    style: TextStyle(color: AppColors.muted, fontSize: 12)),
               ],
             ),
           ),
           IconButton(
             onPressed: onRemove,
             icon: const Icon(Icons.close_rounded),
-            color: Colors.red,
+            color: AppColors.red,
             visualDensity: VisualDensity.compact,
           ),
         ],
@@ -451,7 +451,7 @@ class _ImageGrid extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Icon(Icons.close_rounded,
-                            color: Colors.white, size: 16),
+                            color: AppColors.cream, size: 16),
                       ),
                     ),
                   ),
@@ -466,12 +466,12 @@ class _ImageGrid extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isNextEmpty
                         ? cs.primaryContainer.withOpacity(0.25)
-                        : Colors.grey.shade100,
+                        : AppColors.soft,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isNextEmpty
                           ? cs.primary.withOpacity(0.4)
-                          : Colors.grey.shade300,
+                          : AppColors.soft,
                       style: BorderStyle.solid,
                     ),
                   ),
@@ -485,7 +485,7 @@ class _ImageGrid extends StatelessWidget {
                         size: 26,
                         color: isNextEmpty
                             ? cs.primary.withOpacity(0.7)
-                            : Colors.grey.shade300,
+                            : AppColors.soft,
                       ),
                       if (isNextEmpty) ...[
                         const SizedBox(height: 4),
@@ -509,11 +509,11 @@ class _ImageGrid extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              Icon(Icons.info_outline, size: 13, color: Colors.red.shade400),
+              Icon(Icons.info_outline, size: 13, color: AppColors.muted),
               const SizedBox(width: 5),
               Text(
                 'Faltam $remaining foto${remaining > 1 ? 's' : ''} para completar',
-                style: TextStyle(fontSize: 12, color: Colors.red.shade400),
+                style: TextStyle(fontSize: 12, color: AppColors.muted),
               ),
               const Spacer(),
               if (onAddCamera != null)

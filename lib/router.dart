@@ -1,3 +1,5 @@
+import 'core/widgets/apasbac_loading.dart';
+import 'features/auth/presentation/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -21,17 +23,16 @@ class _SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
+      body: ApasbacLoading(),
     );
   }
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
-
-  return GoRouter(
+  final router = GoRouter(
     initialLocation: '/splash',
     redirect: (context, state) {
+      final authState = ref.read(authProvider);
       final isLoading = authState.isLoading;
       final isLoggedIn = authState.valueOrNull != null;
       final isSplash = state.matchedLocation == '/splash';
@@ -69,6 +70,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/home',
         builder: (_, __) => const HomeScreen(),
         routes: [
+          GoRoute(path: 'profile', builder: (_, __) => const ProfileScreen()),
           GoRoute(
             path: 'animals',
             builder: (_, __) => const MyAnimalsScreen(),
@@ -112,4 +114,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+  ref.listen(authProvider, (_, __) => router.refresh());
+  ref.onDispose(router.dispose);
+  return router;
 });

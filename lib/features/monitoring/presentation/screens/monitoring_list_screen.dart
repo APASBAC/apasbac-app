@@ -1,3 +1,6 @@
+import '../../../../core/widgets/apasbac_loading.dart';
+import '../../../../core/theme/semantic_colors.dart';
+import '../../../../core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,7 +20,7 @@ class MonitoringListScreen extends ConsumerWidget {
         leading: BackButton(onPressed: () => context.go('/home')),
       ),
       body: userAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const ApasbacLoading(),
         error: (_, __) => const Center(child: Text('Erro ao carregar usuário')),
         data: (user) {
           // Usuário não é tutor — exibe aviso sem fazer request
@@ -47,11 +50,11 @@ class _NotTutorView extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50,
+                color: AppColors.soft,
                 shape: BoxShape.circle,
               ),
               child: Icon(Icons.person_off_outlined,
-                  size: 56, color: Colors.orange.shade400),
+                  size: 56, color: AppColors.muted),
             ),
             const SizedBox(height: 24),
             const Text(
@@ -86,7 +89,10 @@ class _NotTutorView extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'Se você já adotou um animal e seu cadastro ainda não foi atualizado, entre em contato com a equipe da APASBAC.',
-                      style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant, height: 1.4),
+                      style: TextStyle(
+                          fontSize: 13,
+                          color: cs.onSurfaceVariant,
+                          height: 1.4),
                     ),
                   ),
                 ],
@@ -108,14 +114,14 @@ class _MonitoringList extends ConsumerWidget {
     final user = ref.watch(authProvider).valueOrNull;
 
     return monitoringsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const ApasbacLoading(),
       error: (err, _) => Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 60, color: Colors.red),
+              const Icon(Icons.error_outline, size: 60, color: AppColors.red),
               const SizedBox(height: 16),
               Text(err.toString(), textAlign: TextAlign.center),
               const SizedBox(height: 16),
@@ -134,10 +140,10 @@ class _MonitoringList extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.monitor_heart_outlined,
-                    size: 80, color: Colors.grey.shade300),
+                    size: 80, color: AppColors.soft),
                 const SizedBox(height: 16),
                 const Text('Nenhum monitoramento encontrado',
-                    style: TextStyle(fontSize: 16, color: Colors.grey)),
+                    style: TextStyle(fontSize: 16, color: AppColors.muted)),
               ],
             ),
           );
@@ -200,7 +206,8 @@ class _MonitoringCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          monitoring.animal?.name ?? 'Animal #${monitoring.animalId}',
+                          monitoring.animal?.name ??
+                              'Animal #${monitoring.animalId}',
                           style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold),
                         ),
@@ -274,11 +281,11 @@ class _MonitoringCard extends StatelessWidget {
   }
 
   Color _statusColor(String status) => switch (status) {
-        'PENDING' => Colors.orange,
-        'IN_REVIEW' => Colors.blue,
-        'APPROVED' => Colors.green,
-        'REJECTED' => Colors.red,
-        _ => Colors.grey,
+        'PENDING' => SemanticColors.pending,
+        'IN_REVIEW' => SemanticColors.review,
+        'APPROVED' => SemanticColors.approved,
+        'REJECTED' => SemanticColors.rejected,
+        _ => AppColors.muted,
       };
 
   IconData _statusIcon(String status) => switch (status) {

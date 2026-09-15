@@ -1,3 +1,5 @@
+import '../../../../core/widgets/apasbac_loading.dart';
+import '../../../../core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,7 +20,7 @@ class MyAnimalsScreen extends ConsumerWidget {
         leading: BackButton(onPressed: () => context.go('/home')),
       ),
       body: animalsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const ApasbacLoading(),
         error: (err, _) => _ErrorView(
           message: err.toString(),
           onRetry: () => ref.invalidate(myAnimalsProvider),
@@ -59,7 +61,8 @@ class _AnimalCard extends StatelessWidget {
           children: [
             // Foto
             ClipRRect(
-              borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
+              borderRadius:
+                  const BorderRadius.horizontal(left: Radius.circular(16)),
               child: SizedBox(
                 width: 110,
                 height: 110,
@@ -69,7 +72,8 @@ class _AnimalCard extends StatelessWidget {
                         fit: BoxFit.cover,
                         placeholder: (_, __) => Container(
                           color: cs.surfaceVariant,
-                          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                          child: const Center(
+                              child: CircularProgressIndicator(strokeWidth: 2)),
                         ),
                         errorWidget: (_, __, ___) => _PhotoPlaceholder(),
                       )
@@ -86,11 +90,13 @@ class _AnimalCard extends StatelessWidget {
                   children: [
                     Text(
                       animal.name,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
                     Text(animal.breed,
-                        style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13)),
+                        style: TextStyle(
+                            color: cs.onSurfaceVariant, fontSize: 13)),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 6,
@@ -128,7 +134,10 @@ class _Chip extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(label,
-          style: TextStyle(fontSize: 11, color: cs.onPrimaryContainer, fontWeight: FontWeight.w500)),
+          style: TextStyle(
+              fontSize: 11,
+              color: cs.onPrimaryContainer,
+              fontWeight: FontWeight.w500)),
     );
   }
 }
@@ -137,8 +146,8 @@ class _PhotoPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.grey.shade200,
-      child: const Icon(Icons.pets, size: 40, color: Colors.grey),
+      color: AppColors.soft,
+      child: const Icon(Icons.pets, size: 40, color: AppColors.muted),
     );
   }
 }
@@ -150,10 +159,10 @@ class _EmptyView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.pets, size: 80, color: Colors.grey.shade300),
+          Icon(Icons.pets, size: 80, color: AppColors.soft),
           const SizedBox(height: 16),
           const Text('Nenhum animal adotado ainda',
-              style: TextStyle(fontSize: 16, color: Colors.grey)),
+              style: TextStyle(fontSize: 16, color: AppColors.muted)),
         ],
       ),
     );
@@ -174,11 +183,12 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 60, color: Colors.red),
+            const Icon(Icons.error_outline, size: 60, color: AppColors.red),
             const SizedBox(height: 16),
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: onRetry, child: const Text('Tentar novamente')),
+            ElevatedButton(
+                onPressed: onRetry, child: const Text('Tentar novamente')),
           ],
         ),
       ),

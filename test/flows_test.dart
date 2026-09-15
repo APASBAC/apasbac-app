@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -38,9 +39,20 @@ class FakeStorage extends StorageService {
 XFile fixture(String name) =>
     XFile.fromData(Uint8List.fromList([1, 2, 3]), name: name);
 
+class MissingLogoBundle extends CachingAssetBundle {
+  @override
+  Future<ByteData> load(String key) {
+    if (key.endsWith('apasbac_logo.png')) {
+      return Future.error(StateError('Logo unavailable for fallback test'));
+    }
+    return rootBundle.load(key);
+  }
+}
+
 void main() {
   testWidgets('Logo ausente usa ícone provisório', (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: ApasbacLogo()));
+    await tester.pumpWidget(MaterialApp(home: DefaultAssetBundle(
+      bundle: MissingLogoBundle(), child: const ApasbacLogo())));
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.pets), findsOneWidget);
     expect(tester.takeException(), isNull);

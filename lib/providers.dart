@@ -10,7 +10,8 @@ import '../core/services/user_service.dart';
 // ─── Services ───────────────────────────────────────────────
 final authServiceProvider = Provider<AuthService>((_) => AuthService());
 final animalServiceProvider = Provider<AnimalService>((_) => AnimalService());
-final monitoringServiceProvider = Provider<MonitoringService>((_) => MonitoringService());
+final monitoringServiceProvider =
+    Provider<MonitoringService>((_) => MonitoringService());
 final userServiceProvider = Provider<UserService>((_) => UserService());
 
 // ─── Auth State ─────────────────────────────────────────────
@@ -82,9 +83,21 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
       () => ref.read(authServiceProvider).getMe(),
     );
   }
+
+  void updateLocalProfile({required String fullName, required String phone}) {
+    final user = state.valueOrNull;
+    if (user == null) return;
+    state = AsyncData(UserModel(
+        id: user.id,
+        fullName: fullName,
+        email: user.email,
+        phone: phone,
+        role: user.role));
+  }
 }
 
-final authProvider = AsyncNotifierProvider<AuthNotifier, UserModel?>(AuthNotifier.new);
+final authProvider =
+    AsyncNotifierProvider<AuthNotifier, UserModel?>(AuthNotifier.new);
 
 // ─── Animals ─────────────────────────────────────────────────
 final myAnimalsProvider = FutureProvider<List<AnimalModel>>((ref) async {
@@ -115,7 +128,8 @@ final adminUsersProvider = FutureProvider<List<UserModel>>((ref) async {
 });
 
 // ─── Monitoring ───────────────────────────────────────────────
-final myMonitoringsProvider = FutureProvider<List<MonitoringModel>>((ref) async {
+final myMonitoringsProvider =
+    FutureProvider<List<MonitoringModel>>((ref) async {
   final user = ref.watch(authProvider).valueOrNull;
   if (user == null) return [];
 
