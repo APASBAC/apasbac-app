@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/update/update_gate.dart';
 
 void main() {
   runApp(const ProviderScope(child: ApasbacApp()));
@@ -18,6 +19,8 @@ class ApasbacApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
       routerConfig: router,
+      builder: (context, child) =>
+          UpdateGate(child: child ?? const SizedBox.shrink()),
     );
   }
 }

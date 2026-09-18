@@ -43,3 +43,15 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/.kotlin/
+
+# Signing material and generated release artifacts
+*.jks
+*.keystore
+*.p12
+*.apk
+*.aab
+key.properties
+.env
+.env.*
+!.env.example

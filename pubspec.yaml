@@ -1,7 +1,7 @@
 name: apasbac_app
 description: App da APASBAC — Associação de Proteção aos Animais Socorro Bicho Assis Chateaubriand
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

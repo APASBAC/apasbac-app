@@ -2,6 +2,8 @@
 
 App mobile para tutores de animais adotados pela APASBAC.
 
+Versionamento Android, assinatura e atualização via GitHub: [guia de releases](docs/ANDROID_UPDATES.md).
+
 ## Funcionalidades
 - Login / Cadastro com JWT + Refresh Token automático
 - Recuperação de senha por e-mail

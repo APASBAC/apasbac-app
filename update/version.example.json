@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "channel": "stable",
+  "versionCode": 12,
+  "versionName": "1.4.0",
+  "minimumSupportedVersionCode": 8,
+  "mandatory": false,
+  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.4.0/app-release.apk",
+  "sha256": "d03ff706e8d6c9b7ab8c9c0a90c0720df3e3b0dbe96e225a154a5a9acd5f74b7",
+  "sizeBytes": 28481920,
+  "publishedAt": "2026-09-17T20:00:00Z",
+  "releaseNotes": ["Correções de bugs", "Melhorias de desempenho"],
+  "_exampleOnly": "Exemplo de schema, não é uma release publicada. O pipeline gera o hash e o tamanho reais."
+}

@@ -1,0 +1,8 @@
+{
+  "minimumSupportedVersionCode": 1,
+  "mandatory": false,
+  "releaseNotes": [
+    "Atualizações seguras dentro do aplicativo.",
+    "Verificação de integridade, versão e assinatura antes da instalação."
+  ]
+}

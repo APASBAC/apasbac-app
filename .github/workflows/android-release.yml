@@ -1,0 +1,106 @@
+name: Android stable release
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-stable-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/source'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: android-production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: source
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.7'
+          channel: stable
+          cache: true
+      - name: Require public distribution repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$GITHUB_REPOSITORY" = 'APASBAC/apasbac-app'
+          test "$(gh api "repos/$GITHUB_REPOSITORY" --jq '.visibility')" = public
+          if gh release view >/dev/null 2>&1; then
+            gh release download --pattern version.json --dir build/previous-release
+          fi
+      - name: Test and analyze
+        run: |
+          flutter pub get
+          dart format --output=none --set-exit-if-changed lib/core/update test/update_test.dart
+          flutter analyze --no-pub --no-fatal-infos
+          flutter analyze --no-pub lib/core/update test/update_test.dart
+          flutter test --no-pub
+          python3 -m unittest discover -s tool -p 'test_*.py'
+      - name: Decode signing key outside the checkout
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$KEYSTORE_BASE64"
+          umask 077
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/apasbac-release.jks"
+      - name: Build signed APK
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/apasbac-release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_PASSWORD"
+          test -n "$ANDROID_KEY_ALIAS"
+          test -n "$ANDROID_KEY_PASSWORD"
+          flutter build apk --release
+          cd android
+          ./gradlew :app:testReleaseUnitTest :app:lintRelease
+      - name: Validate APK and generate manifest
+        id: release
+        env:
+          EXPECTED_CERT_SHA256: ${{ vars.ANDROID_SIGNING_CERT_SHA256 }}
+        run: |
+          sdkmanager 'build-tools;36.0.0'
+          python3 tool/release.py prepare \
+            --aapt "$ANDROID_HOME/build-tools/36.0.0/aapt" \
+            --apksigner "$ANDROID_HOME/build-tools/36.0.0/apksigner"
+      - name: Create draft and attach immutable APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo 'This tag already has a release. Use a new versionCode and tag; never replace its APK.' >&2
+            exit 1
+          fi
+          gh release create "$TAG" --draft --target "$(git rev-parse HEAD)" \
+            --title "$TAG" --notes-file build/release/notes.md \
+            build/app/outputs/flutter-apk/app-release.apk build/release/version.json
+          gh release edit "$TAG" --draft=false --latest
+      - name: Verify public APK and publish manifest on source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          git fetch origin source
+          git merge --ff-only origin/source
+          python3 tool/release.py publish-manifest
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add update/version.json
+          git commit -m "chore: publish Android $TAG manifest"
+          git push origin HEAD:source
+      - name: Remove signing material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/apasbac-release.jks"
