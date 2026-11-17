@@ -1,6 +1,8 @@
 name: Android beta release
-# Compila o APK a partir da branch `source` e publica como pré-release
-# "Beta 1.0" apontando para a branch `main`.
+# Push na `source` → testa, compila e assina o APK SEMPRE com a mesma chave de
+# produção, publica a release "Beta 1.0" (apontando para a `main`) e grava
+# update/version.json na `source`. É esse manifesto que o app instalado e a
+# API consultam para o app se atualizar sozinho, sem baixar de novo à mão.
 on:
   push:
     branches: [source]
@@ -10,26 +12,29 @@ on:
       - 'assets/**'
       - 'pubspec.yaml'
       - 'pubspec.lock'
+      - 'update/release-notes.json'
+      - 'tool/release.py'
       - '.github/workflows/beta-release.yml'
   workflow_dispatch:
 
 permissions:
   contents: write
 
+# Mesmo grupo do workflow estável: nunca publicam ao mesmo tempo.
 concurrency:
-  group: android-beta-release
-  cancel-in-progress: true
-
-env:
-  TAG: v1.0.0-beta
-  TITLE: Beta 1.0
+  group: android-stable-release
+  cancel-in-progress: false
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    environment: android-production
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: source
+          fetch-depth: 0
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -44,63 +49,68 @@ jobs:
           flutter pub get
           flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings
           flutter test --no-pub
-      - name: Chave de assinatura
+          python3 -m unittest discover -s tool -p 'test_*.py'
+      - name: Chave de assinatura (obrigatória e sempre a mesma)
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          PINNED_CERT: ${{ vars.ANDROID_SIGNING_CERT_SHA256 }}
         run: |
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEYSTORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ] || [ -z "$KEY_PASSWORD" ]; then
+            echo "::error::Configure os secrets ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS e ANDROID_KEY_PASSWORD no environment android-production (veja docs/ANDROID_UPDATES.md). Sem a mesma chave em todas as versões o app não consegue se atualizar sozinho."
+            exit 1
+          fi
           umask 077
-          KS="$RUNNER_TEMP/apasbac.jks"
-          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ]; then
-            printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$KS"
-            echo "Usando a chave de produção do repositório."
-          else
-            # Sem os secrets de produção: gera uma chave só para o beta,
-            # para que o APK seja instalável.
-            KEYSTORE_PASSWORD=apasbacbeta; KEY_ALIAS=beta; KEY_PASSWORD=apasbacbeta
-            keytool -genkeypair -v -keystore "$KS" -storepass "$KEYSTORE_PASSWORD" \
-              -keypass "$KEY_PASSWORD" -alias "$KEY_ALIAS" -keyalg RSA -keysize 2048 \
-              -validity 10000 -dname "CN=APASBAC Beta, O=APASBAC, C=BR"
-            echo "::warning::Secrets ANDROID_KEYSTORE_* ausentes: APK assinado com chave temporária de beta."
+          KS="$RUNNER_TEMP/apasbac-release.jks"
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$KS"
+          CERT="$PINNED_CERT"
+          if [ -z "$CERT" ]; then
+            CERT=$(keytool -list -v -keystore "$KS" -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" \
+              | sed -n 's/^[[:space:]]*SHA256: //p' | head -1)
+            echo "::warning::Variable ANDROID_SIGNING_CERT_SHA256 ausente; usando o certificado da chave ($CERT). Cadastre-a para fixar a chave."
           fi
           {
             echo "ANDROID_KEYSTORE_PATH=$KS"
             echo "ANDROID_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
             echo "ANDROID_KEY_ALIAS=$KEY_ALIAS"
-            echo "ANDROID_KEY_PASSWORD=${KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
+            echo "ANDROID_KEY_PASSWORD=$KEY_PASSWORD"
+            echo "EXPECTED_CERT_SHA256=$CERT"
           } >> "$GITHUB_ENV"
-      - name: Compilar APK
+      - name: Compilar APK assinado
+        run: flutter build apk --release --no-pub
+      - name: Validar APK e gerar manifesto
+        id: release
         run: |
-          flutter build apk --release --no-pub
-          cp build/app/outputs/flutter-apk/app-release.apk apasbac-beta-1.0.apk
-          sha256sum apasbac-beta-1.0.apk > apasbac-beta-1.0.apk.sha256
-      - uses: actions/upload-artifact@v4
-        with:
-          name: apasbac-beta-1.0
-          path: apasbac-beta-1.0.apk*
+          sdkmanager 'build-tools;36.0.0'
+          python3 tool/release.py prepare \
+            --aapt "$ANDROID_HOME/build-tools/36.0.0/aapt" \
+            --apksigner "$ANDROID_HOME/build-tools/36.0.0/apksigner"
       - name: Publicar release Beta 1.0 na main
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
         run: |
-          cat > notes.md <<NOTES
-          Versão beta do app APASBAC, compilada a partir da branch \`source\` (${GITHUB_SHA::7}).
-
-          **Correções**
-          - Fotos dos animais e mídias do monitoramento voltam a carregar no app (URLs normalizadas para HTTPS e convertidas para JPG redimensionado no Cloudinary, evitando HEIC e arquivos grandes demais).
-          - No monitoramento, o card do animal mostra os dados reais (raça, sexo e foto) buscando o cadastro completo do animal; o sexo não aparece mais sempre como "Fêmea".
-
-          Instalação: baixe \`apasbac-beta-1.0.apk\` no celular Android e permita instalar de fontes desconhecidas.
-          NOTES
-          sed -i 's/^          //' notes.md
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release edit "$TAG" --title "$TITLE" --notes-file notes.md --prerelease --target main
-            gh release upload "$TAG" apasbac-beta-1.0.apk apasbac-beta-1.0.apk.sha256 --clobber
-          else
-            gh release create "$TAG" --target main --prerelease --title "$TITLE" \
-              --notes-file notes.md apasbac-beta-1.0.apk apasbac-beta-1.0.apk.sha256
+            echo "A tag $TAG já tem release. Aumente o número após '+' em pubspec.yaml (e o nome da versão) para publicar outra; o APK publicado nunca é substituído." >&2
+            exit 1
           fi
+          gh release create "$TAG" --draft --target main --prerelease \
+            --title "Beta $(echo "$TAG" | sed -E 's/^v([0-9]+\.[0-9]+)\..*/\1/')" \
+            --notes-file build/release/notes.md \
+            build/app/outputs/flutter-apk/app-release.apk build/release/version.json
+          gh release edit "$TAG" --draft=false
+      - name: Publicar manifesto de atualização na source
+        run: |
+          git fetch origin source
+          git merge --ff-only origin/source
+          python3 tool/release.py publish-manifest
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add update/version.json
+          git commit -m "chore: publish Android ${{ steps.release.outputs.tag }} manifest"
+          git push origin HEAD:source
       - name: Remover chave
         if: always()
-        run: rm -f "$RUNNER_TEMP/apasbac.jks"
+        run: rm -f "$RUNNER_TEMP/apasbac-release.jks"

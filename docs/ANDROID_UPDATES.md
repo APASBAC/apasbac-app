@@ -146,3 +146,18 @@ Testes automatizados usam HTTP/plataforma simulados no Dart e regras de arquivo/
 Em Windows, se o cache Pub estiver em C: e o projeto em D:, o compilador incremental Kotlin pode falhar ao relativizar caminhos. Execute a validação com `gradlew.bat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug -Pkotlin.incremental=false -Pkotlin.compiler.execution.strategy=in-process --max-workers=2`. Não é necessário mudar a configuração de produção.
 
 Teste final em Android real: instale um APK release assinado, publique um segundo com a mesma chave e código maior, verifique download em background, negação/concessão da permissão, confirmação/cancelamento pelo instalador e preservação da sessão. Repetir em API 24, 26, 31 e 35/36. Para corrupção, use um ambiente de teste com manifesto apontando para um APK cujo hash/package/versão/certificado não corresponda. Não altere o canal stable de produção para esses testes.
+
+## Release beta automática (push na `source`)
+
+`.github/workflows/beta-release.yml` roda a cada push na `source` que altere o app
+(`lib/`, `android/`, `assets/`, `pubspec.*`, `update/release-notes.json`). Ele usa o
+mesmo pipeline seguro do workflow estável — mesma chave de produção, verificação de
+pacote/versão/certificado e hash — publica a release como **pré-release** (ex.: tag
+`v1.0.0-beta`, título "Beta 1.0") apontando para a `main` e grava
+`update/version.json` na `source`. O manifesto fica no canal `stable`, o único que a
+API lê, então quem instalou o beta recebe as próximas versões pelo atualizador do app.
+
+Para lançar uma nova versão: aumente o número depois de `+` em `pubspec.yaml`, mude o
+nome (ex.: `1.0.1-beta+4`) e atualize `update/release-notes.json`. Sem os secrets de
+assinatura o workflow falha de propósito: uma chave diferente impediria a atualização
+automática dos aparelhos.

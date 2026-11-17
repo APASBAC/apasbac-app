@@ -2,7 +2,9 @@
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Atualizações seguras dentro do aplicativo.",
-    "Verificação de integridade, versão e assinatura antes da instalação."
+    "Fotos dos animais e mídias do monitoramento voltam a carregar.",
+    "Card do animal no monitoramento mostra raça, sexo e foto reais.",
+    "Administração: aba com todos os animais e pesquisa de usuários na adoção, nos monitoramentos e na lista de usuários.",
+    "Atualizações futuras são baixadas e instaladas pelo próprio aplicativo."
   ]
 }

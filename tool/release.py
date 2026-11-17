@@ -21,9 +21,10 @@ PACKAGE = "com.example.apasbac_app"
 
 def version():
     text = (ROOT / "pubspec.yaml").read_text(encoding="utf-8")
-    match = re.search(r"^version:\s*(\d+\.\d+\.\d+)\+([1-9]\d*)\s*$", text, re.M)
+    # Aceita sufixo de pré-release (ex.: 1.0.0-beta+3); o inteiro após "+" é o que conta.
+    match = re.search(r"^version:\s*(\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:\.[0-9A-Za-z]+)*)?)\+([1-9]\d*)\s*$", text, re.M)
     if not match:
-        raise ValueError("Use version: major.minor.patch+integer in pubspec.yaml")
+        raise ValueError("Use version: major.minor.patch[-label]+integer in pubspec.yaml")
     name, code = match.group(1), int(match.group(2))
     if code > 2100000000:
         raise ValueError("versionCode exceeds Android limit")
