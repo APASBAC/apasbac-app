@@ -266,6 +266,9 @@ class _AnimalCreateState extends ConsumerState<AnimalCreateScreen> {
     for (final key in ['Nome', 'Descrição', 'Raça', 'Temperamento', 'Vacinas'])
       key: TextEditingController()
   };
+  static const _species = ['Cachorro', 'Gato'];
+  String species = 'Cachorro';
+  final otherSpecies = TextEditingController();
   String sex = 'MALE', size = 'MEDIUM';
   bool escape = false, saving = false;
   final photos = <XFile>[];
@@ -276,8 +279,36 @@ class _AnimalCreateState extends ConsumerState<AnimalCreateScreen> {
     for (final c in fields.values) {
       c.dispose();
     }
+    otherSpecies.dispose();
     super.dispose();
   }
+
+  List<Widget> _speciesFields() => [
+        DropdownButtonFormField<String>(
+            initialValue: species,
+            decoration: const InputDecoration(labelText: 'Espécie'),
+            items: [
+              for (final s in _species)
+                DropdownMenuItem(value: s, child: Text(s)),
+              const DropdownMenuItem(value: 'OUTRA', child: Text('Outra')),
+            ],
+            onChanged: saving ? null : (v) => setState(() => species = v!)),
+        if (species == 'OUTRA')
+          Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: TextFormField(
+                controller: otherSpecies,
+                enabled: !saving,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: const InputDecoration(
+                    labelText: 'Qual espécie?',
+                    hintText: 'Ex.: Coelho, Pássaro'),
+                validator: (v) => species == 'OUTRA' && v!.trim().isEmpty
+                    ? 'Informe a espécie'
+                    : null,
+              )),
+        const SizedBox(height: 12),
+      ];
 
   @override
   Widget build(BuildContext context) => PopScope(
@@ -287,7 +318,8 @@ class _AnimalCreateState extends ConsumerState<AnimalCreateScreen> {
         body: Form(
             key: form,
             child: ListView(padding: const EdgeInsets.all(20), children: [
-              for (final entry in fields.entries)
+              for (final entry in fields.entries) ...[
+                if (entry.key == 'Raça') ..._speciesFields(),
                 Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: TextFormField(
@@ -304,6 +336,7 @@ class _AnimalCreateState extends ConsumerState<AnimalCreateScreen> {
                               ? 'Campo obrigatório'
                               : null,
                     )),
+              ],
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                   initialValue: sex,
@@ -384,6 +417,7 @@ class _AnimalCreateState extends ConsumerState<AnimalCreateScreen> {
       await ref.read(animalServiceProvider).createAnimal(CreateAnimal(
             name: fields['Nome']!.text,
             description: fields['Descrição']!.text,
+            species: species == 'OUTRA' ? otherSpecies.text : species,
             breed: fields['Raça']!.text,
             temperament: fields['Temperamento']!.text,
             sex: sex,
@@ -431,32 +465,32 @@ class _MonitoringCreateState extends ConsumerState<MonitoringCreateScreen> {
   }
 
   List<Widget> _animalOptions(List<AnimalModel> animals) {
-                    final shown = animals
-                        .where((a) =>
-                            a.id == animalId ||
-                            matchesSearch(query,
-                                [a.name, a.breed, a.adopterName, '#${a.id}']))
-                        .toList();
-                    if (shown.isEmpty) {
-                      return [
-                        const Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Text('Nenhum animal corresponde à busca.'))
-                      ];
-                    }
-                    return shown.map<Widget>((a) => Card(
-                          child: ListTile(
-                            enabled: !saving,
-                            selected: a.id == animalId,
-                            leading: Icon(a.id == animalId
-                                ? Icons.radio_button_checked
-                                : Icons.radio_button_unchecked),
-                            title: Text('${a.name} (#${a.id})'),
-                            subtitle: Text(
-                                'Tutor: ${a.adopterName ?? 'não informado'}'),
-                            onTap: () => setState(() => animalId = a.id),
-                          ),
-                        )).toList();
+    final shown = animals
+        .where((a) =>
+            a.id == animalId ||
+            matchesSearch(query, [a.name, a.breed, a.adopterName, '#${a.id}']))
+        .toList();
+    if (shown.isEmpty) {
+      return [
+        const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text('Nenhum animal corresponde à busca.'))
+      ];
+    }
+    return shown
+        .map<Widget>((a) => Card(
+              child: ListTile(
+                enabled: !saving,
+                selected: a.id == animalId,
+                leading: Icon(a.id == animalId
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked),
+                title: Text('${a.name} (#${a.id})'),
+                subtitle: Text('Tutor: ${a.adopterName ?? 'não informado'}'),
+                onTap: () => setState(() => animalId = a.id),
+              ),
+            ))
+        .toList();
   }
 
   @override

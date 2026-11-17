@@ -2,7 +2,8 @@
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Cores do aplicativo seguem a identidade da APASBAC em todas as telas (sem tons rosados ou lilás).",
+    "Cadastro de animal: novo campo Espécie (Cachorro, Gato ou outra).",
+    "Cores do aplicativo seguem a identidade da APASBAC em todas as telas.",
     "Fotos dos animais e do monitoramento carregam no aplicativo."
   ]
 }

@@ -1,10 +1,11 @@
 class CreateAnimal {
-  final String name, description, breed, sex, size, temperament;
+  final String name, description, species, breed, sex, size, temperament;
   final List<String> vaccines, photoUrls;
   final bool escapeTendency;
   const CreateAnimal(
       {required this.name,
       required this.description,
+      this.species = 'Cachorro',
       required this.breed,
       required this.sex,
       required this.size,
@@ -15,6 +16,7 @@ class CreateAnimal {
 
   Map<String, dynamic> toJson() {
     if (name.trim().isEmpty ||
+        species.trim().isEmpty ||
         breed.trim().isEmpty ||
         description.trim().isEmpty ||
         !['MALE', 'FEMALE'].contains(sex) ||
@@ -31,6 +33,7 @@ class CreateAnimal {
     return {
       'name': name.trim(),
       'description': description.trim(),
+      'species': species.trim(),
       'breed': breed.trim(),
       'sex': sex,
       'size': size,

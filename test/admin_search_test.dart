@@ -186,4 +186,22 @@ void main() {
     expect(all.length, 207);
     expect(pages, [1, 2, 3]);
   });
+
+  testWidgets('Cadastro de animal tem espécie com opção Outra', (tester) async {
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+        const ProviderScope(child: MaterialApp(home: AnimalCreateScreen())));
+    expect(find.text('Espécie'), findsOneWidget);
+    expect(find.text('Cachorro'), findsOneWidget);
+    await tester.tap(find.text('Cachorro'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Outra').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Qual espécie?'), findsOneWidget);
+    await tester.tap(find.text('Cadastrar animal'));
+    await tester.pump();
+    expect(find.text('Informe a espécie'), findsOneWidget);
+  });
 }

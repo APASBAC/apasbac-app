@@ -77,11 +77,13 @@ void main() {
       expect(r.data['escapeTendency'], false);
       expect(r.data['vaccines'], ['V10']);
       expect(r.data['name'], 'Lua');
+      expect(r.data['species'], 'Gato');
       return {};
     }));
     await service.createAnimal(const CreateAnimal(
         name: ' Lua ',
         description: 'Resgatada',
+        species: ' Gato ',
         breed: 'SRD',
         sex: 'FEMALE',
         size: 'MEDIUM',
