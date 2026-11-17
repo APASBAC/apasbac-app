@@ -49,6 +49,7 @@ class AnimalModel {
   final bool isAdopted;
   final List<AnimalPhoto> photos;
   final String? adoptedById;
+  final String? adopterName;
   final DateTime? createdAt;
 
   const AnimalModel({
@@ -66,6 +67,7 @@ class AnimalModel {
     required this.isAdopted,
     required this.photos,
     this.adoptedById,
+    this.adopterName,
     this.createdAt,
   });
 
@@ -94,6 +96,8 @@ class AnimalModel {
       adoptedById:
           json['adoptedById']?.toString() ??
           (adoptedBy is Map ? adoptedBy['id']?.toString() : null),
+      adopterName:
+          adoptedBy is Map ? adoptedBy['fullName']?.toString() : null,
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'].toString())
           : null,
@@ -117,6 +121,7 @@ class AnimalModel {
     isAdopted: full.isAdopted || isAdopted,
     photos: full.photos.isNotEmpty ? full.photos : photos,
     adoptedById: full.adoptedById ?? adoptedById,
+    adopterName: full.adopterName ?? adopterName,
     createdAt: full.createdAt ?? createdAt,
   );
 

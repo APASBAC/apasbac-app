@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../api/api_client.dart';
 import '../models/user_model.dart';
+import 'paged.dart';
 
 class UserService {
   final Dio api;
@@ -28,6 +29,10 @@ class UserService {
     });
     return _parseList(response.data);
   }
+
+  /// Todos os usuários (percorre todas as páginas).
+  Future<List<UserModel>> getAllUsers() =>
+      fetchAllPages((page, limit) => getUsers(page: page, limit: limit));
 
   Future<void> updateRole(String userId, String role) async {
     debugPrint('[UserService] updateRole -> PATCH /users/$userId/role');

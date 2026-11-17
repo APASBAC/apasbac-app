@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../models/create_animal.dart';
 import '../api/api_client.dart';
 import '../models/animal_model.dart';
+import 'paged.dart';
 
 class AnimalService {
   final Dio api;
@@ -28,6 +29,11 @@ class AnimalService {
     );
     return _parseList(response.data);
   }
+
+  /// Todos os animais cadastrados (percorre todas as páginas).
+  Future<List<AnimalModel>> getAllAnimals({bool? isAdopted}) =>
+      fetchAllPages((page, limit) =>
+          getAnimals(isAdopted: isAdopted, page: page, limit: limit));
 
   Future<List<AnimalModel>> getMyAnimals(String userId) async {
     debugPrint('[AnimalService] getMyAnimals → GET /animals?isAdopted=true');

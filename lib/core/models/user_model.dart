@@ -4,6 +4,7 @@ class UserModel {
   final String email;
   final String phone;
   final String role;
+  final String cpf;
 
   const UserModel({
     required this.id,
@@ -11,6 +12,7 @@ class UserModel {
     required this.email,
     required this.phone,
     required this.role,
+    this.cpf = '',
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -19,6 +21,7 @@ class UserModel {
         email: json['email'] ?? '',
         phone: json['phone'] ?? '',
         role: json['role'] ?? 'USER',
+        cpf: json['cpf']?.toString() ?? '',
       );
 
   /// Pode acessar /monitoring/mine (endpoint exclusivo para tutores)

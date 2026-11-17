@@ -6,6 +6,7 @@ import '../api/api_client.dart';
 import '../models/monitoring_model.dart';
 import '../models/animal_model.dart';
 import 'animal_service.dart';
+import 'paged.dart';
 
 class MonitoringService {
   final Dio api;
@@ -20,10 +21,22 @@ class MonitoringService {
   /// (sem sexo, porte e fotos). Busca o cadastro completo de cada animal
   /// para que os cards mostrem os dados reais.
   Future<List<MonitoringModel>> _withAnimals(
-    List<MonitoringModel> items,
-  ) async {
+    List<MonitoringModel> items, {
+    bool bulk = false,
+  }) async {
     final ids = items.map((m) => m.animalId).where((id) => id > 0).toSet();
     final found = <int, AnimalModel>{};
+    // Equipe: uma única listagem completa evita uma requisição por animal.
+    if (bulk && ids.length > 3) {
+      try {
+        for (final a in await animals.getAllAnimals()) {
+          if (ids.contains(a.id)) found[a.id] = a;
+        }
+        return items.map((m) => m.withAnimal(found[m.animalId])).toList();
+      } catch (e) {
+        debugPrint('[MonitoringService] listagem de animais falhou: $e');
+      }
+    }
     await Future.wait(
       ids.map((id) async {
         try {
@@ -34,6 +47,24 @@ class MonitoringService {
       }),
     );
     return items.map((m) => m.withAnimal(found[m.animalId])).toList();
+  }
+
+  /// TUTOR → todos os monitoramentos próprios (todas as páginas)
+  Future<List<MonitoringModel>> getAllMyMonitorings() async {
+    final items = await fetchAllPages((page, limit) async =>
+        _parseList((await api.get('/monitoring/mine',
+                queryParameters: {'page': page, 'limit': limit}))
+            .data));
+    return _withAnimals(items);
+  }
+
+  /// ADMIN/STAFF → todos os monitoramentos (todas as páginas)
+  Future<List<MonitoringModel>> getEveryMonitoring() async {
+    final items = await fetchAllPages((page, limit) async =>
+        _parseList((await api.get('/monitoring',
+                queryParameters: {'page': page, 'limit': limit}))
+            .data));
+    return _withAnimals(items, bulk: true);
   }
 
   /// TUTOR → GET /monitoring/mine

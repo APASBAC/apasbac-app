@@ -1,5 +1,7 @@
 import '../../../../core/widgets/apasbac_loading.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/models/animal_model.dart';
+import '../../../../core/widgets/search_field.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../providers.dart';
@@ -418,6 +420,7 @@ class MonitoringCreateScreen extends ConsumerStatefulWidget {
 
 class _MonitoringCreateState extends ConsumerState<MonitoringCreateScreen> {
   int? animalId;
+  String query = '';
   final notes = TextEditingController();
   bool saving = false;
   String? error;
@@ -425,6 +428,35 @@ class _MonitoringCreateState extends ConsumerState<MonitoringCreateScreen> {
   void dispose() {
     notes.dispose();
     super.dispose();
+  }
+
+  List<Widget> _animalOptions(List<AnimalModel> animals) {
+                    final shown = animals
+                        .where((a) =>
+                            a.id == animalId ||
+                            matchesSearch(query,
+                                [a.name, a.breed, a.adopterName, '#${a.id}']))
+                        .toList();
+                    if (shown.isEmpty) {
+                      return [
+                        const Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Text('Nenhum animal corresponde à busca.'))
+                      ];
+                    }
+                    return shown.map<Widget>((a) => Card(
+                          child: ListTile(
+                            enabled: !saving,
+                            selected: a.id == animalId,
+                            leading: Icon(a.id == animalId
+                                ? Icons.radio_button_checked
+                                : Icons.radio_button_unchecked),
+                            title: Text('${a.name} (#${a.id})'),
+                            subtitle: Text(
+                                'Tutor: ${a.adopterName ?? 'não informado'}'),
+                            onTap: () => setState(() => animalId = a.id),
+                          ),
+                        )).toList();
   }
 
   @override
@@ -448,17 +480,13 @@ class _MonitoringCreateState extends ConsumerState<MonitoringCreateScreen> {
                           'Vincule um tutor ao animal na aba Adoções primeiro.'));
                 }
                 return ListView(padding: const EdgeInsets.all(20), children: [
-                  DropdownButtonFormField<int>(
-                      initialValue: animalId,
-                      isExpanded: true,
-                      decoration:
-                          const InputDecoration(labelText: 'Animal adotado'),
-                      items: animals
-                          .map((a) => DropdownMenuItem(
-                              value: a.id, child: Text('${a.name} (#${a.id})')))
-                          .toList(),
-                      onChanged:
-                          saving ? null : (v) => setState(() => animalId = v)),
+                  SearchField(
+                    hint: 'Buscar animal ou tutor',
+                    padding: EdgeInsets.zero,
+                    onChanged: (v) => setState(() => query = v),
+                  ),
+                  const SizedBox(height: 8),
+                  ..._animalOptions(animals),
                   const Padding(
                       padding: EdgeInsets.symmetric(vertical: 12),
                       child: Text(

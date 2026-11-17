@@ -41,6 +41,8 @@ class MonitoringModel {
   final String id;
   final int animalId;
   final String tutorId;
+  final String? tutorName;
+  final String? tutorEmail;
   final String status;
   final String? notes;
   final String? reviewNotes;
@@ -53,6 +55,8 @@ class MonitoringModel {
     required this.id,
     required this.animalId,
     required this.tutorId,
+    this.tutorName,
+    this.tutorEmail,
     required this.status,
     this.notes,
     this.reviewNotes,
@@ -102,6 +106,7 @@ class MonitoringModel {
     final animal = json['animal'] is Map
         ? AnimalModel.fromJson(Map<String, dynamic>.from(json['animal'] as Map))
         : null;
+    final user = json['user'] ?? json['tutor'];
     final rawAnimalId = json['animalId'];
     final animalId = rawAnimalId is int
         ? rawAnimalId
@@ -110,7 +115,9 @@ class MonitoringModel {
     return MonitoringModel(
       id: (json['id'] ?? '').toString(),
       animalId: animalId,
-      tutorId: json['userId'] ?? json['tutorId'] ?? '',
+      tutorId: (json['userId'] ?? json['tutorId'] ?? '').toString(),
+      tutorName: user is Map ? user['fullName']?.toString() : null,
+      tutorEmail: user is Map ? user['email']?.toString() : null,
       status: json['status'] ?? 'PENDING',
       notes: json['notes'],
       reviewNotes: json['reviewNotes'],
@@ -129,6 +136,8 @@ class MonitoringModel {
     id: id,
     animalId: animalId,
     tutorId: tutorId,
+    tutorName: tutorName,
+    tutorEmail: tutorEmail,
     status: status,
     notes: notes,
     reviewNotes: reviewNotes,

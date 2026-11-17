@@ -118,13 +118,13 @@ final animalDetailProvider =
 final adminAnimalsProvider = FutureProvider<List<AnimalModel>>((ref) async {
   final user = ref.watch(authProvider).valueOrNull;
   if (user == null || !user.isAdminOrStaff) return [];
-  return ref.read(animalServiceProvider).getAnimals();
+  return ref.read(animalServiceProvider).getAllAnimals();
 });
 
 final adminUsersProvider = FutureProvider<List<UserModel>>((ref) async {
   final user = ref.watch(authProvider).valueOrNull;
   if (user == null || !user.isAdminOrStaff) return [];
-  return ref.read(userServiceProvider).getUsers();
+  return ref.read(userServiceProvider).getAllUsers();
 });
 
 // ─── Monitoring ───────────────────────────────────────────────
@@ -138,9 +138,9 @@ final myMonitoringsProvider =
   // TUTOR → /monitoring/mine (próprios monitoramentos)
   // ADMIN/STAFF → /monitoring (lista geral)
   if (user.isTutor) {
-    return svc.getMyMonitorings();
+    return svc.getAllMyMonitorings();
   } else if (user.isAdminOrStaff) {
-    return svc.getAllMonitorings();
+    return svc.getEveryMonitoring();
   }
 
   return [];
