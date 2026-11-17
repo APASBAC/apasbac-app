@@ -42,7 +42,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _error = null;
     });
     try {
-      await ref.read(authProvider.notifier).register(
+      final error = await ref.read(authProvider.notifier).register(
             fullName: _nameCtrl.text.trim(),
             email: _emailCtrl.text.trim(),
             phone: _phoneCtrl.text.trim(),
@@ -50,6 +50,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             password: _passCtrl.text,
             confirmPassword: _confirmCtrl.text,
           );
+      if (error != null && mounted) setState(() => _error = error);
     } on DioException catch (e) {
       final msg = e.response?.data?['message'] ?? 'Erro ao cadastrar';
       setState(() => _error = msg is List ? msg.join(', ') : msg.toString());

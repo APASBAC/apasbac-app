@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/models/user_model.dart';
 import '../core/models/animal_model.dart';
@@ -15,30 +16,60 @@ final monitoringServiceProvider =
 final userServiceProvider = Provider<UserService>((_) => UserService());
 
 // ─── Auth State ─────────────────────────────────────────────
+
+/// Aviso exibido na tela de login (ex.: sessão expirada).
+final authNoticeProvider = StateProvider<String?>((_) => null);
+
+String _apiMessage(Object e, String fallback) {
+  if (e is DioException) {
+    final data = e.response?.data;
+    final msg = data is Map ? data['message'] : null;
+    if (msg is List && msg.isNotEmpty) return msg.join('\n');
+    if (msg is String && msg.isNotEmpty) return msg;
+    if (e.response == null) {
+      return 'Sem conexão com o servidor. Verifique sua internet.';
+    }
+  }
+  return fallback;
+}
+
 class AuthNotifier extends AsyncNotifier<UserModel?> {
   @override
   Future<UserModel?> build() async {
     final svc = ref.read(authServiceProvider);
-    final loggedIn = await svc.isLoggedIn();
-    if (!loggedIn) return null;
+    // Sessão recusada pela API durante o uso: volta para o login.
+    final expired = svc.client.sessionExpired;
+    void onExpired() {
+      if (state.valueOrNull == null) return;
+      ref.read(authNoticeProvider.notifier).state =
+          'Sua sessão expirou. Entre novamente.';
+      state = const AsyncData(null);
+    }
+
+    expired.addListener(onExpired);
+    ref.onDispose(() => expired.removeListener(onExpired));
     try {
-      return await svc.getMe();
+      return await svc.restoreSession();
     } catch (_) {
       return null;
     }
   }
 
-  Future<String?> login(String email, String password) async {
+  Future<String?> login(String email, String password,
+      {bool remember = true}) async {
     state = const AsyncLoading();
-    final result = await AsyncValue.guard(
-      () => ref.read(authServiceProvider).login(email, password),
-    );
-    state = result;
-    if (result.hasError) {
+    try {
+      final user = await ref
+          .read(authServiceProvider)
+          .login(email, password, remember: remember);
+      ref.read(authNoticeProvider.notifier).state = null;
+      state = AsyncData(user);
+      return null;
+    } catch (e) {
       state = const AsyncData(null);
-      return result.error?.toString() ?? 'Erro ao fazer login';
+      final msg = _apiMessage(e, 'E-mail ou senha incorretos.');
+      return msg == 'Unauthorized' ? 'E-mail ou senha incorretos.' : msg;
     }
-    return null;
   }
 
   Future<String?> register({
@@ -50,27 +81,21 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
     required String confirmPassword,
   }) async {
     state = const AsyncLoading();
-    final svc = ref.read(authServiceProvider);
     try {
-      await svc.register(
-        fullName: fullName,
-        email: email,
-        phone: phone,
-        cpf: cpf,
-        password: password,
-        confirmPassword: confirmPassword,
-      );
+      final user = await ref.read(authServiceProvider).register(
+            fullName: fullName,
+            email: email,
+            phone: phone,
+            cpf: cpf,
+            password: password,
+            confirmPassword: confirmPassword,
+          );
+      state = AsyncData(user);
+      return null;
     } catch (e) {
       state = const AsyncData(null);
-      return e.toString();
+      return _apiMessage(e, 'Não foi possível concluir o cadastro.');
     }
-    final result = await AsyncValue.guard(() => svc.login(email, password));
-    state = result;
-    if (result.hasError) {
-      state = const AsyncData(null);
-      return result.error?.toString() ?? 'Erro ao fazer login após cadastro';
-    }
-    return null;
   }
 
   Future<void> logout() async {
@@ -92,7 +117,8 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
         fullName: fullName,
         email: user.email,
         phone: phone,
-        role: user.role));
+        role: user.role,
+        cpf: user.cpf));
   }
 }
 

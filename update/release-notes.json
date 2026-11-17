@@ -2,8 +2,9 @@
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "O aplicativo procura atualizações também ao voltar para ele, sem precisar fechar.",
-    "Lembretes de monitoramento: avisos 3 dias antes, 1 dia antes, no dia do prazo e se atrasar.",
-    "Tela inicial mostra Meus Animais e Monitoramentos só quando há algo para ver."
+    "Opção \"Lembrar de mim\" no login: continue conectado ou saia ao fechar o aplicativo.",
+    "Sessão renovada automaticamente em segundo plano; se expirar, o app volta ao login com aviso.",
+    "Sair da conta encerra a sessão também no servidor.",
+    "Sem internet, o aplicativo abre com a última conta conectada."
   ]
 }

@@ -20,7 +20,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passCtrl = TextEditingController();
   bool _obscure = true;
   bool _loading = false;
+  bool _remember = true;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  /// Recupera a última escolha de "Lembrar de mim" e o e-mail lembrado.
+  Future<void> _loadPreferences() async {
+    try {
+      final svc = ref.read(authServiceProvider);
+      final remember = await svc.rememberMe();
+      final email = remember ? await svc.lastEmail() : null;
+      if (!mounted) return;
+      setState(() {
+        _remember = remember;
+        if (email != null && _emailCtrl.text.isEmpty) _emailCtrl.text = email;
+      });
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -39,6 +60,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final error = await ref.read(authProvider.notifier).login(
             _emailCtrl.text.trim(),
             _passCtrl.text,
+            remember: _remember,
           );
       if (error != null && mounted) {
         setState(() => _error = error);
@@ -57,6 +79,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final notice = ref.watch(authNoticeProvider);
     return Scaffold(
       body: AppContent(
           maxWidth: 480,
@@ -81,6 +104,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const Text('Entre para acompanhar seus animais.',
                           textAlign: TextAlign.center),
                       const SizedBox(height: 32),
+                      if (notice != null && _error == null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: cs.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(children: [
+                            Icon(Icons.lock_clock_outlined,
+                                color: cs.primary, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(child: Text(notice)),
+                          ]),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                       TextFormField(
                         controller: _emailCtrl,
                         keyboardType: TextInputType.emailAddress,
@@ -117,12 +156,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             : null,
                       ),
                       const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () =>
-                              context.push('/auth/forgot-password'),
-                          child: const Text('Esqueci minha senha'),
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: _loading
+                                ? null
+                                : () => setState(() => _remember = !_remember),
+                            child:
+                                Row(mainAxisSize: MainAxisSize.min, children: [
+                              Checkbox(
+                                value: _remember,
+                                onChanged: _loading
+                                    ? null
+                                    : (v) =>
+                                        setState(() => _remember = v ?? true),
+                              ),
+                              const Flexible(child: Text('Lembrar de mim')),
+                              const SizedBox(width: 8),
+                            ]),
+                          ),
+                          TextButton(
+                            onPressed: () =>
+                                context.push('/auth/forgot-password'),
+                            child: const Text('Esqueci minha senha'),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 12),
+                        child: Text(
+                          _remember
+                              ? 'Você continua conectado neste celular.'
+                              : 'Você sairá da conta ao fechar o aplicativo.',
+                          style: TextStyle(
+                              fontSize: 12, color: cs.onSurfaceVariant),
                         ),
                       ),
                       if (_error != null) ...[
