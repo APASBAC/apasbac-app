@@ -1,4 +1,5 @@
 import 'animal_model.dart';
+import '../utils/image_url.dart';
 
 class MonitoringMedia {
   final String id;
@@ -14,15 +15,21 @@ class MonitoringMedia {
   factory MonitoringMedia.fromJson(dynamic json) {
     // Objeto completo: { id, url, type }
     if (json is Map<String, dynamic>) {
+      final type = (json['type'] ?? 'IMAGE').toString().toUpperCase();
+      final url = json['url']?.toString();
       return MonitoringMedia(
-        id: json['id'] ?? '',
-        url: json['url'] ?? '',
-        type: json['type'] ?? 'IMAGE',
+        id: (json['id'] ?? url ?? '').toString(),
+        url: type == 'VIDEO' ? normalizeVideoUrl(url) : normalizeImageUrl(url),
+        type: type,
       );
     }
     // String pura (URL direta de imageUrls[])
     if (json is String) {
-      return MonitoringMedia(id: json, url: json, type: 'IMAGE');
+      return MonitoringMedia(
+        id: json,
+        url: normalizeImageUrl(json),
+        type: 'IMAGE',
+      );
     }
     return const MonitoringMedia(id: '', url: '', type: 'IMAGE');
   }
@@ -62,14 +69,26 @@ class MonitoringModel {
 
     final videoUrl = json['videoUrl'] as String?;
     if (videoUrl != null && videoUrl.isNotEmpty) {
-      medias.add(MonitoringMedia(id: videoUrl, url: videoUrl, type: 'VIDEO'));
+      medias.add(
+        MonitoringMedia(
+          id: videoUrl,
+          url: normalizeVideoUrl(videoUrl),
+          type: 'VIDEO',
+        ),
+      );
     }
 
     final imageUrls = json['imageUrls'];
     if (imageUrls is List) {
       for (final url in imageUrls) {
         if (url is String && url.isNotEmpty) {
-          medias.add(MonitoringMedia(id: url, url: url, type: 'IMAGE'));
+          medias.add(
+            MonitoringMedia(
+              id: url,
+              url: normalizeImageUrl(url),
+              type: 'IMAGE',
+            ),
+          );
         }
       }
     }
@@ -80,17 +99,23 @@ class MonitoringModel {
       medias.addAll(raw.map((m) => MonitoringMedia.fromJson(m)));
     }
 
+    final animal = json['animal'] is Map
+        ? AnimalModel.fromJson(Map<String, dynamic>.from(json['animal'] as Map))
+        : null;
+    final rawAnimalId = json['animalId'];
+    final animalId = rawAnimalId is int
+        ? rawAnimalId
+        : int.tryParse(rawAnimalId?.toString() ?? '') ?? animal?.id ?? 0;
+
     return MonitoringModel(
-      id: json['id'] ?? '',
-      animalId: json['animalId'] ?? 0,
+      id: (json['id'] ?? '').toString(),
+      animalId: animalId,
       tutorId: json['userId'] ?? json['tutorId'] ?? '',
       status: json['status'] ?? 'PENDING',
       notes: json['notes'],
       reviewNotes: json['reviewNotes'],
       medias: medias,
-      animal: json['animal'] != null
-          ? AnimalModel.fromJson(json['animal'] as Map<String, dynamic>)
-          : null,
+      animal: animal,
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'])
           : null,
@@ -100,13 +125,26 @@ class MonitoringModel {
     );
   }
 
+  MonitoringModel withAnimal(AnimalModel? full) => MonitoringModel(
+    id: id,
+    animalId: animalId,
+    tutorId: tutorId,
+    status: status,
+    notes: notes,
+    reviewNotes: reviewNotes,
+    medias: medias,
+    animal: full == null ? animal : (animal?.mergedWith(full) ?? full),
+    createdAt: createdAt,
+    dueDate: dueDate,
+  );
+
   String get statusLabel => switch (status) {
-        'PENDING' => 'Aguardando envio',
-        'IN_REVIEW' => 'Em análise',
-        'APPROVED' => 'Aprovado',
-        'REJECTED' => 'Rejeitado',
-        _ => status,
-      };
+    'PENDING' => 'Aguardando envio',
+    'IN_REVIEW' => 'Em análise',
+    'APPROVED' => 'Aprovado',
+    'REJECTED' => 'Rejeitado',
+    _ => status,
+  };
 
   bool get canSubmit => status == 'PENDING' || status == 'REJECTED';
   bool get isUnderReview => status == 'IN_REVIEW';

@@ -65,8 +65,11 @@ class _AnimalDetailViewState extends State<_AnimalDetailView> {
                                 Container(color: cs.surfaceVariant),
                             errorWidget: (_, __, ___) => Container(
                               color: cs.surfaceVariant,
-                              child: const Icon(Icons.pets,
-                                  size: 80, color: AppColors.muted),
+                              child: const Icon(
+                                Icons.pets,
+                                size: 80,
+                                color: AppColors.muted,
+                              ),
                             ),
                           ),
                         ),
@@ -81,8 +84,9 @@ class _AnimalDetailViewState extends State<_AnimalDetailView> {
                                 animal.photos.length,
                                 (i) => AnimatedContainer(
                                   duration: const Duration(milliseconds: 200),
-                                  margin:
-                                      const EdgeInsets.symmetric(horizontal: 3),
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 3,
+                                  ),
                                   width: i == _currentPhoto ? 18 : 8,
                                   height: 8,
                                   decoration: BoxDecoration(
@@ -99,8 +103,11 @@ class _AnimalDetailViewState extends State<_AnimalDetailView> {
                     )
                   : Container(
                       color: cs.surfaceVariant,
-                      child: const Icon(Icons.pets,
-                          size: 80, color: AppColors.muted),
+                      child: const Icon(
+                        Icons.pets,
+                        size: 80,
+                        color: AppColors.muted,
+                      ),
                     ),
             ),
           ),
@@ -118,9 +125,7 @@ class _AnimalDetailViewState extends State<_AnimalDetailView> {
                       Expanded(
                         child: Text(
                           animal.name,
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineMedium
+                          style: Theme.of(context).textTheme.headlineMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -132,7 +137,12 @@ class _AnimalDetailViewState extends State<_AnimalDetailView> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    animal.breed,
+                    [
+                      if (animal.species.isNotEmpty &&
+                          animal.species != 'Não informada')
+                        animal.species,
+                      animal.breedLabel,
+                    ].toSet().join(' · '),
                     style: TextStyle(fontSize: 16, color: cs.onSurfaceVariant),
                   ),
                   const SizedBox(height: 16),
@@ -142,14 +152,20 @@ class _AnimalDetailViewState extends State<_AnimalDetailView> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _InfoChip(
-                          icon: Icons.male,
+                      if (animal.hasSex)
+                        _InfoChip(
+                          icon: animal.sexLabel == 'Macho'
+                              ? Icons.male
+                              : Icons.female,
                           label: animal.sexLabel,
-                          color: cs.primary),
-                      _InfoChip(
+                          color: cs.primary,
+                        ),
+                      if (animal.sizeLabel.isNotEmpty)
+                        _InfoChip(
                           icon: Icons.straighten,
                           label: animal.sizeLabel,
-                          color: cs.secondary),
+                          color: cs.secondary,
+                        ),
                       if (animal.escapeTendency)
                         _InfoChip(
                           icon: Icons.warning_amber_rounded,
@@ -162,33 +178,43 @@ class _AnimalDetailViewState extends State<_AnimalDetailView> {
 
                   _Section(
                     title: 'Descrição',
-                    child: Text(animal.description,
-                        style: const TextStyle(fontSize: 15, height: 1.5)),
+                    child: Text(
+                      animal.description,
+                      style: const TextStyle(fontSize: 15, height: 1.5),
+                    ),
                   ),
                   const SizedBox(height: 20),
 
                   _Section(
                     title: 'Temperamento',
-                    child: Text(animal.temperament,
-                        style: const TextStyle(fontSize: 15, height: 1.5)),
+                    child: Text(
+                      animal.temperament,
+                      style: const TextStyle(fontSize: 15, height: 1.5),
+                    ),
                   ),
                   const SizedBox(height: 20),
 
                   _Section(
                     title: 'Vacinas',
                     child: animal.vaccines.isEmpty
-                        ? Text('Nenhuma vacina registrada',
-                            style: TextStyle(color: cs.onSurfaceVariant))
+                        ? Text(
+                            'Nenhuma vacina registrada',
+                            style: TextStyle(color: cs.onSurfaceVariant),
+                          )
                         : Wrap(
                             spacing: 8,
                             runSpacing: 8,
                             children: animal.vaccines
-                                .map((v) => Chip(
-                                      label: Text(v),
-                                      avatar:
-                                          const Icon(Icons.vaccines, size: 16),
-                                      visualDensity: VisualDensity.compact,
-                                    ))
+                                .map(
+                                  (v) => Chip(
+                                    label: Text(v),
+                                    avatar: const Icon(
+                                      Icons.vaccines,
+                                      size: 16,
+                                    ),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                )
                                 .toList(),
                           ),
                   ),
@@ -213,8 +239,10 @@ class _Section extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title,
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 10),
         child,
       ],
@@ -226,8 +254,11 @@ class _InfoChip extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
-  const _InfoChip(
-      {required this.icon, required this.label, required this.color});
+  const _InfoChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -243,9 +274,14 @@ class _InfoChip extends StatelessWidget {
         children: [
           Icon(icon, size: 16, color: color),
           const SizedBox(width: 6),
-          Text(label,
-              style: TextStyle(
-                  fontSize: 13, color: color, fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
@@ -266,9 +302,14 @@ class _StatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withOpacity(0.4)),
       ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 13, color: color, fontWeight: FontWeight.bold)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 13,
+          color: color,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }

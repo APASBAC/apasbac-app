@@ -53,8 +53,11 @@ class _NotTutorView extends StatelessWidget {
                 color: AppColors.soft,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.person_off_outlined,
-                  size: 56, color: AppColors.muted),
+              child: Icon(
+                Icons.person_off_outlined,
+                size: 56,
+                color: AppColors.muted,
+              ),
             ),
             const SizedBox(height: 24),
             const Text(
@@ -90,9 +93,10 @@ class _NotTutorView extends StatelessWidget {
                     child: Text(
                       'Se você já adotou um animal e seu cadastro ainda não foi atualizado, entre em contato com a equipe da APASBAC.',
                       style: TextStyle(
-                          fontSize: 13,
-                          color: cs.onSurfaceVariant,
-                          height: 1.4),
+                        fontSize: 13,
+                        color: cs.onSurfaceVariant,
+                        height: 1.4,
+                      ),
                     ),
                   ),
                 ],
@@ -139,11 +143,16 @@ class _MonitoringList extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.monitor_heart_outlined,
-                    size: 80, color: AppColors.soft),
+                Icon(
+                  Icons.monitor_heart_outlined,
+                  size: 80,
+                  color: AppColors.soft,
+                ),
                 const SizedBox(height: 16),
-                const Text('Nenhum monitoramento encontrado',
-                    style: TextStyle(fontSize: 16, color: AppColors.muted)),
+                const Text(
+                  'Nenhum monitoramento encontrado',
+                  style: TextStyle(fontSize: 16, color: AppColors.muted),
+                ),
               ],
             ),
           );
@@ -170,10 +179,7 @@ class _MonitoringList extends ConsumerWidget {
 class _MonitoringCard extends StatelessWidget {
   final MonitoringModel monitoring;
   final bool canSubmit;
-  const _MonitoringCard({
-    required this.monitoring,
-    required this.canSubmit,
-  });
+  const _MonitoringCard({required this.monitoring, required this.canSubmit});
 
   @override
   Widget build(BuildContext context) {
@@ -197,8 +203,11 @@ class _MonitoringCard extends StatelessWidget {
                       color: statusColor.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(_statusIcon(monitoring.status),
-                        color: statusColor, size: 22),
+                    child: Icon(
+                      _statusIcon(monitoring.status),
+                      color: statusColor,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -209,18 +218,26 @@ class _MonitoringCard extends StatelessWidget {
                           monitoring.animal?.name ??
                               'Animal #${monitoring.animalId}',
                           style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        if (monitoring.animal?.breed != null)
-                          Text(monitoring.animal!.breed,
-                              style: TextStyle(
-                                  fontSize: 12, color: cs.onSurfaceVariant)),
+                        if (monitoring.animal != null)
+                          Text(
+                            monitoring.animal!.summary,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
                       ],
                     ),
                   ),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(20),
@@ -229,9 +246,10 @@ class _MonitoringCard extends StatelessWidget {
                     child: Text(
                       monitoring.statusLabel,
                       style: TextStyle(
-                          fontSize: 11,
-                          color: statusColor,
-                          fontWeight: FontWeight.bold),
+                        fontSize: 11,
+                        color: statusColor,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -249,25 +267,33 @@ class _MonitoringCard extends StatelessWidget {
               Row(
                 children: [
                   if (monitoring.createdAt != null) ...[
-                    Icon(Icons.calendar_today_outlined,
-                        size: 13, color: cs.onSurfaceVariant),
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      size: 13,
+                      color: cs.onSurfaceVariant,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       DateFormat('dd/MM/yyyy').format(monitoring.createdAt!),
-                      style:
-                          TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: cs.onSurfaceVariant,
+                      ),
                     ),
                   ],
                   const Spacer(),
                   if (canSubmit)
                     TextButton.icon(
-                      onPressed: () => context
-                          .push('/home/monitoring/${monitoring.id}/submit'),
+                      onPressed: () => context.push(
+                        '/home/monitoring/${monitoring.id}/submit',
+                      ),
                       icon: const Icon(Icons.upload_rounded, size: 16),
                       label: const Text('Enviar'),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         visualDensity: VisualDensity.compact,
                       ),
                     ),
@@ -281,18 +307,18 @@ class _MonitoringCard extends StatelessWidget {
   }
 
   Color _statusColor(String status) => switch (status) {
-        'PENDING' => SemanticColors.pending,
-        'IN_REVIEW' => SemanticColors.review,
-        'APPROVED' => SemanticColors.approved,
-        'REJECTED' => SemanticColors.rejected,
-        _ => AppColors.muted,
-      };
+    'PENDING' => SemanticColors.pending,
+    'IN_REVIEW' => SemanticColors.review,
+    'APPROVED' => SemanticColors.approved,
+    'REJECTED' => SemanticColors.rejected,
+    _ => AppColors.muted,
+  };
 
   IconData _statusIcon(String status) => switch (status) {
-        'PENDING' => Icons.hourglass_empty_rounded,
-        'IN_REVIEW' => Icons.manage_search_rounded,
-        'APPROVED' => Icons.check_circle_outline_rounded,
-        'REJECTED' => Icons.cancel_outlined,
-        _ => Icons.help_outline_rounded,
-      };
+    'PENDING' => Icons.hourglass_empty_rounded,
+    'IN_REVIEW' => Icons.manage_search_rounded,
+    'APPROVED' => Icons.check_circle_outline_rounded,
+    'REJECTED' => Icons.cancel_outlined,
+    _ => Icons.help_outline_rounded,
+  };
 }

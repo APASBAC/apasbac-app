@@ -75,21 +75,27 @@ class _MonitoringDetailView extends StatelessWidget {
                   radius: 28,
                   backgroundImage: monitoring.animal!.primaryPhoto != null
                       ? CachedNetworkImageProvider(
-                          monitoring.animal!.primaryPhoto!.url)
+                          monitoring.animal!.primaryPhoto!.url,
+                        )
+                      : null,
+                  onBackgroundImageError:
+                      monitoring.animal!.primaryPhoto != null
+                      ? (_, __) {}
                       : null,
                   backgroundColor: cs.primaryContainer,
                   child: monitoring.animal!.primaryPhoto == null
                       ? Icon(Icons.pets, color: cs.onPrimaryContainer)
                       : null,
                 ),
-                title: Text(monitoring.animal!.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text(
-                    '${monitoring.animal!.breed} · ${monitoring.animal!.sexLabel}'),
+                title: Text(
+                  monitoring.animal!.name,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(monitoring.animal!.summary),
                 trailing: IconButton(
                   icon: const Icon(Icons.open_in_new_rounded),
                   onPressed: () =>
-                      context.push('/home/animals/${monitoring.animal!.id}'),
+                      context.push('/home/animals/${monitoring.animalId}'),
                 ),
               ),
             ),
@@ -108,8 +114,9 @@ class _MonitoringDetailView extends StatelessWidget {
                     icon: Icons.calendar_today_outlined,
                     label: 'Criado em',
                     value: monitoring.createdAt != null
-                        ? DateFormat('dd/MM/yyyy HH:mm')
-                            .format(monitoring.createdAt!)
+                        ? DateFormat(
+                            'dd/MM/yyyy HH:mm',
+                          ).format(monitoring.createdAt!)
                         : '-',
                   ),
                   if (monitoring.dueDate != null) ...[
@@ -117,8 +124,9 @@ class _MonitoringDetailView extends StatelessWidget {
                     _InfoRow(
                       icon: Icons.event_outlined,
                       label: 'Prazo',
-                      value:
-                          DateFormat('dd/MM/yyyy').format(monitoring.dueDate!),
+                      value: DateFormat(
+                        'dd/MM/yyyy',
+                      ).format(monitoring.dueDate!),
                     ),
                   ],
                   if (monitoring.notes != null) ...[
@@ -143,12 +151,14 @@ class _MonitoringDetailView extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: SemanticColors.status(monitoring.status)
-                    .withValues(alpha: .10),
+                color: SemanticColors.status(
+                  monitoring.status,
+                ).withValues(alpha: .10),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: SemanticColors.status(monitoring.status)
-                      .withValues(alpha: .10),
+                  color: SemanticColors.status(
+                    monitoring.status,
+                  ).withValues(alpha: .10),
                 ),
               ),
               child: Row(
@@ -195,7 +205,8 @@ class _MonitoringDetailView extends StatelessWidget {
                 color: SemanticColors.review.withValues(alpha: .10),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                    color: SemanticColors.review.withValues(alpha: .10)),
+                  color: SemanticColors.review.withValues(alpha: .10),
+                ),
               ),
               child: Row(
                 children: [
@@ -203,14 +214,18 @@ class _MonitoringDetailView extends StatelessWidget {
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: SemanticColors.review),
+                      strokeWidth: 2,
+                      color: SemanticColors.review,
+                    ),
                   ),
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'Seu envio está sendo revisado pela equipe da APASBAC. Aguarde o resultado.',
-                      style:
-                          TextStyle(color: SemanticColors.review, fontSize: 14),
+                      style: TextStyle(
+                        color: SemanticColors.review,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ],
@@ -230,20 +245,20 @@ class _StatusBanner extends StatelessWidget {
   const _StatusBanner({required this.monitoring});
 
   Color get _color => switch (monitoring.status) {
-        'PENDING' => SemanticColors.pending,
-        'IN_REVIEW' => SemanticColors.review,
-        'APPROVED' => SemanticColors.approved,
-        'REJECTED' => SemanticColors.rejected,
-        _ => AppColors.muted,
-      };
+    'PENDING' => SemanticColors.pending,
+    'IN_REVIEW' => SemanticColors.review,
+    'APPROVED' => SemanticColors.approved,
+    'REJECTED' => SemanticColors.rejected,
+    _ => AppColors.muted,
+  };
 
   IconData get _icon => switch (monitoring.status) {
-        'PENDING' => Icons.hourglass_empty_rounded,
-        'IN_REVIEW' => Icons.manage_search_rounded,
-        'APPROVED' => Icons.check_circle_rounded,
-        'REJECTED' => Icons.cancel_rounded,
-        _ => Icons.help_rounded,
-      };
+    'PENDING' => Icons.hourglass_empty_rounded,
+    'IN_REVIEW' => Icons.manage_search_rounded,
+    'APPROVED' => Icons.check_circle_rounded,
+    'REJECTED' => Icons.cancel_rounded,
+    _ => Icons.help_rounded,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -262,14 +277,18 @@ class _StatusBanner extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Status do monitoramento',
-                  style:
-                      TextStyle(fontSize: 12, color: _color.withOpacity(0.8))),
+              Text(
+                'Status do monitoramento',
+                style: TextStyle(fontSize: 12, color: _color.withOpacity(0.8)),
+              ),
               const SizedBox(height: 2),
               Text(
                 monitoring.statusLabel,
                 style: TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.bold, color: _color),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: _color,
+                ),
               ),
             ],
           ),
@@ -309,8 +328,11 @@ class _MediaGrid extends StatelessWidget {
                 child: media.isVideo
                     ? Container(
                         color: Colors.black87,
-                        child: const Icon(Icons.play_circle_filled_rounded,
-                            color: AppColors.cream, size: 40),
+                        child: const Icon(
+                          Icons.play_circle_filled_rounded,
+                          color: AppColors.cream,
+                          size: 40,
+                        ),
                       )
                     : CachedNetworkImage(
                         imageUrl: media.url,
@@ -318,8 +340,9 @@ class _MediaGrid extends StatelessWidget {
                         placeholder: (_, __) =>
                             Container(color: AppColors.soft),
                         errorWidget: (_, __, ___) => Container(
-                            color: AppColors.soft,
-                            child: const Icon(Icons.broken_image_outlined)),
+                          color: AppColors.soft,
+                          child: const Icon(Icons.broken_image_outlined),
+                        ),
                       ),
               ),
               if (media.isVideo)
@@ -327,14 +350,18 @@ class _MediaGrid extends StatelessWidget {
                   top: 4,
                   right: 4,
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black54,
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Text('VID',
-                        style: TextStyle(color: AppColors.cream, fontSize: 10)),
+                    child: const Text(
+                      'VID',
+                      style: TextStyle(color: AppColors.cream, fontSize: 10),
+                    ),
                   ),
                 ),
             ],
@@ -367,7 +394,8 @@ class _MediaPreviewDialog extends StatelessWidget {
                         placeholder: (_, __) =>
                             const Center(child: CircularProgressIndicator()),
                         errorWidget: (_, __, ___) => const Center(
-                            child: Icon(Icons.broken_image_outlined)),
+                          child: Icon(Icons.broken_image_outlined),
+                        ),
                       ),
                     ),
             ),
@@ -459,8 +487,10 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(title,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold));
+    return Text(
+      title,
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+    );
   }
 }
 
@@ -468,8 +498,11 @@ class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  const _InfoRow(
-      {required this.icon, required this.label, required this.value});
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -481,13 +514,16 @@ class _InfoRow extends StatelessWidget {
         const SizedBox(width: 10),
         SizedBox(
           width: 90,
-          child: Text(label,
-              style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+          ),
         ),
         Expanded(
-          child: Text(value,
-              style:
-                  const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+          child: Text(
+            value,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+          ),
         ),
       ],
     );

@@ -4,50 +4,93 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../api/api_client.dart';
 import '../models/monitoring_model.dart';
+import '../models/animal_model.dart';
+import 'animal_service.dart';
 
 class MonitoringService {
   final Dio api;
   final StorageService storage;
-  MonitoringService({Dio? api, StorageService? storage})
-      : api = api ?? ApiClient().dio,
-        storage = storage ?? StorageService();
+  final AnimalService animals;
+  MonitoringService({Dio? api, StorageService? storage, AnimalService? animals})
+    : api = api ?? ApiClient().dio,
+      storage = storage ?? StorageService(),
+      animals = animals ?? AnimalService(api: api);
+
+  /// A API de monitoramento devolve o animal só com id, nome, espécie e raça
+  /// (sem sexo, porte e fotos). Busca o cadastro completo de cada animal
+  /// para que os cards mostrem os dados reais.
+  Future<List<MonitoringModel>> _withAnimals(
+    List<MonitoringModel> items,
+  ) async {
+    final ids = items.map((m) => m.animalId).where((id) => id > 0).toSet();
+    final found = <int, AnimalModel>{};
+    await Future.wait(
+      ids.map((id) async {
+        try {
+          found[id] = await animals.getAnimalById(id);
+        } catch (e) {
+          debugPrint('[MonitoringService] animal $id indisponível: $e');
+        }
+      }),
+    );
+    return items.map((m) => m.withAnimal(found[m.animalId])).toList();
+  }
 
   /// TUTOR → GET /monitoring/mine
   Future<List<MonitoringModel>> getMyMonitorings({int page = 1}) async {
     debugPrint(
-        '[MonitoringService] getMyMonitorings → GET /monitoring/mine?page=$page');
-    final response =
-        await api.get('/monitoring/mine', queryParameters: {'page': page});
-    return _parseList(response.data);
+      '[MonitoringService] getMyMonitorings → GET /monitoring/mine?page=$page',
+    );
+    final response = await api.get(
+      '/monitoring/mine',
+      queryParameters: {'page': page},
+    );
+    return _withAnimals(_parseList(response.data));
   }
 
   /// ADMIN/STAFF → GET /monitoring
-  Future<List<MonitoringModel>> getAllMonitorings(
-      {int page = 1, int limit = 20}) async {
+  Future<List<MonitoringModel>> getAllMonitorings({
+    int page = 1,
+    int limit = 20,
+  }) async {
     debugPrint(
-        '[MonitoringService] getAllMonitorings → GET /monitoring?page=$page');
-    final response = await api
-        .get('/monitoring', queryParameters: {'page': page, 'limit': limit});
-    return _parseList(response.data);
+      '[MonitoringService] getAllMonitorings → GET /monitoring?page=$page',
+    );
+    final response = await api.get(
+      '/monitoring',
+      queryParameters: {'page': page, 'limit': limit},
+    );
+    return _withAnimals(_parseList(response.data));
   }
 
   /// TUTOR busca pelo /mine; ADMIN/STAFF busca direto por ID
-  Future<MonitoringModel> getMonitoringById(String id,
-      {bool isAdminOrStaff = false}) async {
+  Future<MonitoringModel> getMonitoringById(
+    String id, {
+    bool isAdminOrStaff = false,
+    bool withAnimal = true,
+  }) async {
     final response = await api.get('/monitoring/$id');
-    return MonitoringModel.fromJson(_unwrapSingle(response.data));
+    final m = MonitoringModel.fromJson(_unwrapSingle(response.data));
+    if (!withAnimal) return m;
+    return (await _withAnimals([m])).first;
   }
 
-  Future<void> createMonitoring(
-      {required int animalId, required String tutorId, String? notes}) async {
+  Future<void> createMonitoring({
+    required int animalId,
+    required String tutorId,
+    String? notes,
+  }) async {
     if (animalId <= 0 || tutorId.trim().isEmpty) {
       throw ArgumentError('Selecione o animal e o tutor.');
     }
-    await api.post('/monitoring', data: {
-      'animalId': animalId,
-      'tutorId': tutorId,
-      if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
-    });
+    await api.post(
+      '/monitoring',
+      data: {
+        'animalId': animalId,
+        'tutorId': tutorId,
+        if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
+      },
+    );
   }
 
   Future<void> submitMonitoring({
@@ -57,7 +100,7 @@ class MonitoringService {
     void Function(double)? onProgress,
   }) async {
     if (images.length != 5) throw ArgumentError('Adicione exatamente 5 fotos.');
-    final current = await getMonitoringById(monitoringId);
+    final current = await getMonitoringById(monitoringId, withAnimal: false);
     if (!current.canSubmit) {
       throw StateError('Este monitoramento não aceita envios.');
     }
@@ -66,20 +109,28 @@ class MonitoringService {
     }
     final urls = <String>[];
     for (var i = 0; i < images.length; i++) {
-      urls.add(await storage.upload(images[i], folder: 'monitoring/images',
+      urls.add(
+        await storage.upload(
+          images[i],
+          folder: 'monitoring/images',
           onProgress: (sent, total) {
-        if (total > 0) onProgress?.call((i + sent / total) / 6);
-      }));
+            if (total > 0) onProgress?.call((i + sent / total) / 6);
+          },
+        ),
+      );
     }
-    final videoUrl = await storage.upload(video,
-        folder: 'monitoring/videos',
-        resourceType: 'video', onProgress: (sent, total) {
-      if (total > 0) onProgress?.call((5 + sent / total) / 6);
-    });
-    await api.post('/monitoring/$monitoringId/submit', data: {
-      'videoUrl': videoUrl,
-      'imageUrls': urls,
-    });
+    final videoUrl = await storage.upload(
+      video,
+      folder: 'monitoring/videos',
+      resourceType: 'video',
+      onProgress: (sent, total) {
+        if (total > 0) onProgress?.call((5 + sent / total) / 6);
+      },
+    );
+    await api.post(
+      '/monitoring/$monitoringId/submit',
+      data: {'videoUrl': videoUrl, 'imageUrls': urls},
+    );
   }
 
   Future<void> reviewMonitoring({
@@ -87,16 +138,20 @@ class MonitoringService {
     required bool approved,
     String? notes,
   }) async {
-    final current = await getMonitoringById(monitoringId);
+    final current = await getMonitoringById(monitoringId, withAnimal: false);
     if (!current.isUnderReview) {
       throw StateError('Somente envios em análise podem ser revisados.');
     }
     debugPrint(
-        '[MonitoringService] reviewMonitoring -> PATCH /monitoring/$monitoringId/review');
-    await api.patch('/monitoring/$monitoringId/review', data: {
-      'approved': approved,
-      if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
-    });
+      '[MonitoringService] reviewMonitoring -> PATCH /monitoring/$monitoringId/review',
+    );
+    await api.patch(
+      '/monitoring/$monitoringId/review',
+      data: {
+        'approved': approved,
+        if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
+      },
+    );
   }
 
   // A API envelopa assim: { success, data: { data: [...], total, ... }, timestamp }

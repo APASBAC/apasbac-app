@@ -61,8 +61,9 @@ class _AnimalCard extends StatelessWidget {
           children: [
             // Foto
             ClipRRect(
-              borderRadius:
-                  const BorderRadius.horizontal(left: Radius.circular(16)),
+              borderRadius: const BorderRadius.horizontal(
+                left: Radius.circular(16),
+              ),
               child: SizedBox(
                 width: 110,
                 height: 110,
@@ -73,7 +74,8 @@ class _AnimalCard extends StatelessWidget {
                         placeholder: (_, __) => Container(
                           color: cs.surfaceVariant,
                           child: const Center(
-                              child: CircularProgressIndicator(strokeWidth: 2)),
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         ),
                         errorWidget: (_, __, ___) => _PhotoPlaceholder(),
                       )
@@ -91,18 +93,25 @@ class _AnimalCard extends StatelessWidget {
                     Text(
                       animal.name,
                       style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 4),
-                    Text(animal.breed,
-                        style: TextStyle(
-                            color: cs.onSurfaceVariant, fontSize: 13)),
+                    Text(
+                      animal.breedLabel,
+                      style: TextStyle(
+                        color: cs.onSurfaceVariant,
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 6,
                       children: [
-                        _Chip(animal.sexLabel),
-                        _Chip(animal.sizeLabel),
+                        if (animal.hasSex) _Chip(animal.sexLabel),
+                        if (animal.sizeLabel.isNotEmpty)
+                          _Chip(animal.sizeLabel),
                       ],
                     ),
                   ],
@@ -133,11 +142,14 @@ class _Chip extends StatelessWidget {
         color: cs.primaryContainer,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 11,
-              color: cs.onPrimaryContainer,
-              fontWeight: FontWeight.w500)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          color: cs.onPrimaryContainer,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
     );
   }
 }
@@ -161,8 +173,10 @@ class _EmptyView extends StatelessWidget {
         children: [
           Icon(Icons.pets, size: 80, color: AppColors.soft),
           const SizedBox(height: 16),
-          const Text('Nenhum animal adotado ainda',
-              style: TextStyle(fontSize: 16, color: AppColors.muted)),
+          const Text(
+            'Nenhum animal adotado ainda',
+            style: TextStyle(fontSize: 16, color: AppColors.muted),
+          ),
         ],
       ),
     );
@@ -188,7 +202,9 @@ class _ErrorView extends StatelessWidget {
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 16),
             ElevatedButton(
-                onPressed: onRetry, child: const Text('Tentar novamente')),
+              onPressed: onRetry,
+              child: const Text('Tentar novamente'),
+            ),
           ],
         ),
       ),

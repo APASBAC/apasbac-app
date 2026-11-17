@@ -18,21 +18,23 @@ class AnimalService {
     int limit = 100,
   }) async {
     debugPrint('[AnimalService] getAnimals -> GET /animals');
-    final response = await api.get('/animals', queryParameters: {
-      if (isAdopted != null) 'isAdopted': isAdopted,
-      'limit': limit,
-      'page': page,
-    });
+    final response = await api.get(
+      '/animals',
+      queryParameters: {
+        if (isAdopted != null) 'isAdopted': isAdopted,
+        'limit': limit,
+        'page': page,
+      },
+    );
     return _parseList(response.data);
   }
 
   Future<List<AnimalModel>> getMyAnimals(String userId) async {
     debugPrint('[AnimalService] getMyAnimals → GET /animals?isAdopted=true');
-    final response = await api.get('/animals', queryParameters: {
-      'isAdopted': true,
-      'limit': 100,
-      'page': 1,
-    });
+    final response = await api.get(
+      '/animals',
+      queryParameters: {'isAdopted': true, 'limit': 100, 'page': 1},
+    );
 
     final items = _parseList(response.data);
 
@@ -46,9 +48,11 @@ class AnimalService {
     final response = await api.get('/animals/public/$id');
     final body = response.data;
     // Desembrulha envelope { success, data: {...} }
-    final json = (body is Map && body['data'] != null && body['data'] is Map)
-        ? body['data'] as Map<String, dynamic>
-        : body as Map<String, dynamic>;
+    final json = Map<String, dynamic>.from(
+      (body is Map && body['data'] is Map) ? body['data'] as Map : body as Map,
+    );
+    // A rota pública não devolve o id; preserva o id consultado.
+    json['id'] ??= id;
     return AnimalModel.fromJson(json);
   }
 
@@ -65,7 +69,8 @@ class AnimalService {
 
   Future<AnimalModel> getAnimalByUuid(String uuid) async {
     debugPrint(
-        '[AnimalService] getAnimalByUuid($uuid) → GET /animals/public/uuid/$uuid');
+      '[AnimalService] getAnimalByUuid($uuid) → GET /animals/public/uuid/$uuid',
+    );
     final response = await api.get('/animals/public/uuid/$uuid');
     final body = response.data;
     final json = (body is Map && body['data'] != null && body['data'] is Map)
@@ -79,10 +84,9 @@ class AnimalService {
     required String userId,
   }) async {
     debugPrint(
-        '[AnimalService] linkAdopter($animalId) -> POST /animals/$animalId/adopter');
-    await api.post('/animals/$animalId/adopter', data: {
-      'userId': userId,
-    });
+      '[AnimalService] linkAdopter($animalId) -> POST /animals/$animalId/adopter',
+    );
+    await api.post('/animals/$animalId/adopter', data: {'userId': userId});
   }
 
   List<AnimalModel> _parseList(dynamic body) {

@@ -1,0 +1,106 @@
+name: Android beta release
+# Compila o APK a partir da branch `source` e publica como pré-release
+# "Beta 1.0" apontando para a branch `main`.
+on:
+  push:
+    branches: [source]
+    paths:
+      - 'lib/**'
+      - 'android/**'
+      - 'assets/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/beta-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-beta-release
+  cancel-in-progress: true
+
+env:
+  TAG: v1.0.0-beta
+  TITLE: Beta 1.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.7'
+          channel: stable
+          cache: true
+      - name: Testes
+        run: |
+          flutter pub get
+          flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings
+          flutter test --no-pub
+      - name: Chave de assinatura
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          umask 077
+          KS="$RUNNER_TEMP/apasbac.jks"
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ]; then
+            printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$KS"
+            echo "Usando a chave de produção do repositório."
+          else
+            # Sem os secrets de produção: gera uma chave só para o beta,
+            # para que o APK seja instalável.
+            KEYSTORE_PASSWORD=apasbacbeta; KEY_ALIAS=beta; KEY_PASSWORD=apasbacbeta
+            keytool -genkeypair -v -keystore "$KS" -storepass "$KEYSTORE_PASSWORD" \
+              -keypass "$KEY_PASSWORD" -alias "$KEY_ALIAS" -keyalg RSA -keysize 2048 \
+              -validity 10000 -dname "CN=APASBAC Beta, O=APASBAC, C=BR"
+            echo "::warning::Secrets ANDROID_KEYSTORE_* ausentes: APK assinado com chave temporária de beta."
+          fi
+          {
+            echo "ANDROID_KEYSTORE_PATH=$KS"
+            echo "ANDROID_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+            echo "ANDROID_KEY_ALIAS=$KEY_ALIAS"
+            echo "ANDROID_KEY_PASSWORD=${KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
+          } >> "$GITHUB_ENV"
+      - name: Compilar APK
+        run: |
+          flutter build apk --release --no-pub
+          cp build/app/outputs/flutter-apk/app-release.apk apasbac-beta-1.0.apk
+          sha256sum apasbac-beta-1.0.apk > apasbac-beta-1.0.apk.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apasbac-beta-1.0
+          path: apasbac-beta-1.0.apk*
+      - name: Publicar release Beta 1.0 na main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > notes.md <<NOTES
+          Versão beta do app APASBAC, compilada a partir da branch \`source\` (${GITHUB_SHA::7}).
+
+          **Correções**
+          - Fotos dos animais e mídias do monitoramento voltam a carregar no app (URLs normalizadas para HTTPS e convertidas para JPG redimensionado no Cloudinary, evitando HEIC e arquivos grandes demais).
+          - No monitoramento, o card do animal mostra os dados reais (raça, sexo e foto) buscando o cadastro completo do animal; o sexo não aparece mais sempre como "Fêmea".
+
+          Instalação: baixe \`apasbac-beta-1.0.apk\` no celular Android e permita instalar de fontes desconhecidas.
+          NOTES
+          sed -i 's/^          //' notes.md
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$TITLE" --notes-file notes.md --prerelease --target main
+            gh release upload "$TAG" apasbac-beta-1.0.apk apasbac-beta-1.0.apk.sha256 --clobber
+          else
+            gh release create "$TAG" --target main --prerelease --title "$TITLE" \
+              --notes-file notes.md apasbac-beta-1.0.apk apasbac-beta-1.0.apk.sha256
+          fi
+      - name: Remover chave
+        if: always()
+        run: rm -f "$RUNNER_TEMP/apasbac.jks"
