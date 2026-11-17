@@ -35,6 +35,8 @@ void main() {
     await tester.pumpWidget(ProviderScope(overrides: [
       authProvider.overrideWith(TestAuth.new),
       userServiceProvider.overrideWithValue(UserService(api: api)),
+      myAnimalsProvider.overrideWith((ref) async => []),
+      myMonitoringsProvider.overrideWith((ref) async => []),
     ], child: const ApasbacApp()));
     await tester.pumpAndSettle();
     expect(find.text('Abrir administração'), findsOneWidget);

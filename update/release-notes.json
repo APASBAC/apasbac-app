@@ -2,9 +2,8 @@
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Atualização automática mais compatível: se o instalador do aparelho recusar, o app usa o instalador padrão do Android.",
-    "Cadastro de animal: novo campo Espécie (Cachorro, Gato ou outra).",
-    "Cores do aplicativo seguem a identidade da APASBAC em todas as telas.",
-    "Fotos dos animais e do monitoramento carregam no aplicativo."
+    "Lembretes de monitoramento: avisos 3 dias antes, 1 dia antes, no dia do prazo e se atrasar.",
+    "Tela inicial mostra Meus Animais e Monitoramentos só quando há algo para ver.",
+    "Atualização automática mais compatível com celulares de diferentes fabricantes."
   ]
 }

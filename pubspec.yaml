@@ -1,7 +1,7 @@
 name: apasbac_app
 description: App da APASBAC — Associação de Proteção aos Animais Socorro Bicho Assis Chateaubriand
 publish_to: 'none'
-version: 1.0.4-beta+7
+version: 1.0.5-beta+8
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -27,6 +27,8 @@ dependencies:
   # Icons
   cupertino_icons: ^1.0.6
   shared_preferences: ^2.5.5
+  flutter_local_notifications: ^22.3.3
+  timezone: ^0.11.2
 
 dev_dependencies:
   flutter_test:

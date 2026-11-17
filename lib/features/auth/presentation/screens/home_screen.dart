@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../providers.dart';
+import '../../../../core/models/monitoring_model.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -41,123 +42,180 @@ class HomeScreen extends ConsumerWidget {
       body: AppContent(
           maxWidth: 760,
           child: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Olá, ${user?.fullName.split(' ').first ?? 'Tutor'}',
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'O que você quer ver hoje?',
-                    style: TextStyle(color: cs.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 32),
-                  if (user?.isAdminOrStaff == true) ...[
-                    Row(children: [
-                      RoleBadge(role: user!.role),
-                      const SizedBox(width: 12),
-                      const Expanded(child: Text('Equipe APASBAC'))
-                    ]),
-                    const SizedBox(height: 16),
-                    Card(
-                        child: Padding(
-                            padding: const EdgeInsets.all(22),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Icon(Icons.volunteer_activism_outlined,
-                                    size: 28),
-                                const SizedBox(height: 14),
-                                Text('Cada cuidado faz a diferença.',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.copyWith(
-                                            fontWeight: FontWeight.w700)),
-                                const SizedBox(height: 8),
-                                const Text(
-                                    'Organize adoções e acompanhe os relatórios dos tutores em um só lugar.',
-                                    style: TextStyle(height: 1.5)),
-                                const SizedBox(height: 18),
-                                FilledButton.icon(
-                                    onPressed: () => context.go('/home/admin'),
-                                    icon: const Icon(Icons.arrow_forward),
-                                    label: const Text('Abrir administração')),
-                              ],
-                            ))),
-                  ] else
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                          color: AppColors.soft,
-                          borderRadius: BorderRadius.circular(24)),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(Icons.favorite_outline_rounded,
-                                size: 30),
-                            const SizedBox(height: 16),
-                            Text('Uma nova vida.\nUm cuidado para sempre.',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineSmall
-                                    ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        height: 1.2)),
-                            const SizedBox(height: 12),
-                            const Text(
-                                'A APASBAC continua por perto em cada etapa dessa história.',
-                                style: TextStyle(height: 1.5)),
-                          ]),
-                    ),
-                  const SizedBox(height: 28),
-                  Text('Seu dia a dia',
+            child: RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(myAnimalsProvider);
+                ref.invalidate(myMonitoringsProvider);
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Olá, ${user?.fullName.split(' ').first ?? 'Tutor'}',
                       style: Theme.of(context)
                           .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 14),
-                  _NavCard(
-                    icon: Icons.favorite_rounded,
-                    color: AppColors.red,
-                    title: 'Meus Animais',
-                    subtitle: 'Veja seus pets adotados',
-                    onTap: () => context.go('/home/animals'),
-                  ),
-                  const SizedBox(height: 16),
-                  _NavCard(
-                    icon: Icons.monitor_heart_rounded,
-                    color: AppColors.red,
-                    title: 'Monitoramentos',
-                    subtitle: user?.isAdminOrStaff == true
-                        ? 'Acompanhe os relatórios dos tutores'
-                        : 'Acompanhe e envie relatórios',
-                    onTap: () => context.go('/home/monitoring'),
-                  ),
-                  if (user?.isAdminOrStaff == true) ...[
-                    const SizedBox(height: 16),
-                    _NavCard(
-                      icon: Icons.admin_panel_settings_rounded,
-                      color: AppColors.red,
-                      title: 'Administração',
-                      subtitle: 'Gerencie adoções, usuários e validações',
-                      onTap: () => context.go('/home/admin'),
+                          .headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'O que você quer ver hoje?',
+                      style: TextStyle(color: cs.onSurfaceVariant),
+                    ),
+                    const SizedBox(height: 32),
+                    if (user?.isAdminOrStaff == true) ...[
+                      Row(children: [
+                        RoleBadge(role: user!.role),
+                        const SizedBox(width: 12),
+                        const Expanded(child: Text('Equipe APASBAC'))
+                      ]),
+                      const SizedBox(height: 16),
+                      Card(
+                          child: Padding(
+                              padding: const EdgeInsets.all(22),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(Icons.volunteer_activism_outlined,
+                                      size: 28),
+                                  const SizedBox(height: 14),
+                                  Text('Cada cuidado faz a diferença.',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleLarge
+                                          ?.copyWith(
+                                              fontWeight: FontWeight.w700)),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                      'Organize adoções e acompanhe os relatórios dos tutores em um só lugar.',
+                                      style: TextStyle(height: 1.5)),
+                                  const SizedBox(height: 18),
+                                  FilledButton.icon(
+                                      onPressed: () =>
+                                          context.go('/home/admin'),
+                                      icon: const Icon(Icons.arrow_forward),
+                                      label: const Text('Abrir administração')),
+                                ],
+                              ))),
+                    ] else
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                            color: AppColors.soft,
+                            borderRadius: BorderRadius.circular(24)),
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.favorite_outline_rounded,
+                                  size: 30),
+                              const SizedBox(height: 16),
+                              Text('Uma nova vida.\nUm cuidado para sempre.',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineSmall
+                                      ?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          height: 1.2)),
+                              const SizedBox(height: 12),
+                              const Text(
+                                  'A APASBAC continua por perto em cada etapa dessa história.',
+                                  style: TextStyle(height: 1.5)),
+                            ]),
+                      ),
+                    const SizedBox(height: 28),
+                    ..._dailyCards(context, ref, user?.isAdminOrStaff == true),
+                    if (user?.isAdminOrStaff == true) ...[
+                      const SizedBox(height: 16),
+                      _NavCard(
+                        icon: Icons.admin_panel_settings_rounded,
+                        color: AppColors.red,
+                        title: 'Administração',
+                        subtitle: 'Gerencie adoções, usuários e validações',
+                        onTap: () => context.go('/home/admin'),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           )),
     );
   }
+}
+
+/// "Meus Animais" e "Monitoramentos" só aparecem quando há o que mostrar.
+List<Widget> _dailyCards(BuildContext context, WidgetRef ref, bool staff) {
+  final animals = ref.watch(myAnimalsProvider);
+  final monitorings = ref.watch(myMonitoringsProvider);
+  // Em caso de erro o card continua visível para a pessoa tentar de novo.
+  bool show(AsyncValue<List<Object>> v) =>
+      v.hasError || (v.valueOrNull?.isNotEmpty ?? false);
+  final loading = animals.isLoading || monitorings.isLoading;
+  final cards = <Widget>[
+    if (show(animals))
+      _NavCard(
+        icon: Icons.favorite_rounded,
+        color: AppColors.red,
+        title: 'Meus Animais',
+        subtitle: 'Veja seus pets adotados',
+        onTap: () => context.go('/home/animals'),
+      ),
+    if (show(monitorings))
+      _NavCard(
+        icon: Icons.monitor_heart_rounded,
+        color: AppColors.red,
+        title: 'Monitoramentos',
+        subtitle: staff
+            ? 'Acompanhe os relatórios dos tutores'
+            : _pendingLabel(monitorings.valueOrNull ?? const []),
+        onTap: () => context.go('/home/monitoring'),
+      ),
+  ];
+  if (cards.isEmpty && loading) {
+    return const [
+      Center(
+          child: Padding(
+              padding: EdgeInsets.all(16),
+              child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2)))),
+    ];
+  }
+  if (cards.isEmpty) {
+    return staff
+        ? const []
+        : [
+            Text(
+              'Quando você adotar um animal pela APASBAC, ele e os monitoramentos aparecem aqui.',
+              style: TextStyle(color: AppColors.muted, height: 1.5),
+            ),
+          ];
+  }
+  return [
+    Text('Seu dia a dia',
+        style: Theme.of(context)
+            .textTheme
+            .titleMedium
+            ?.copyWith(fontWeight: FontWeight.w700)),
+    const SizedBox(height: 14),
+    for (var i = 0; i < cards.length; i++) ...[
+      if (i > 0) const SizedBox(height: 16),
+      cards[i],
+    ],
+  ];
+}
+
+String _pendingLabel(List<MonitoringModel> items) {
+  final pending = items.where((m) => m.canSubmit).length;
+  if (pending == 0) return 'Acompanhe seus relatórios';
+  return pending == 1
+      ? '1 monitoramento aguardando envio'
+      : '$pending monitoramentos aguardando envio';
 }
 
 class _NavCard extends StatelessWidget {
