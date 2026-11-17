@@ -2,7 +2,7 @@
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Fotos dos animais e do monitoramento agora carregam no aplicativo.",
-    "Se uma foto falhar, aparece a opção de tocar para tentar de novo."
+    "Cores do aplicativo seguem a identidade da APASBAC em todas as telas (sem tons rosados ou lilás).",
+    "Fotos dos animais e do monitoramento carregam no aplicativo."
   ]
 }

@@ -94,7 +94,7 @@ class _AnimalDetailViewState extends State<_AnimalDetailView> {
                       ],
                     )
                   : Container(
-                      color: cs.surfaceVariant,
+                      color: cs.surfaceContainerHighest,
                       child: const Icon(
                         Icons.pets,
                         size: 80,

@@ -9,6 +9,9 @@ abstract final class AppColors {
 }
 
 ThemeData buildAppTheme() {
+  // Todas as funções de cor são definidas aqui. Antes, as que ficavam de fora
+  // (surfaceVariant, surfaceTint, *Fixed, surfaceDim...) eram geradas pelo
+  // Material 3 a partir do vermelho e apareciam rosadas/lilás no aparelho.
   final scheme = ColorScheme.fromSeed(seedColor: AppColors.red).copyWith(
     primary: AppColors.red,
     onPrimary: AppColors.cream,
@@ -36,6 +39,30 @@ ThemeData buildAppTheme() {
     onErrorContainer: AppColors.red,
     inverseSurface: AppColors.red,
     onInverseSurface: AppColors.cream,
+    inversePrimary: AppColors.soft,
+    tertiaryContainer: AppColors.soft,
+    onTertiaryContainer: AppColors.red,
+    surfaceDim: AppColors.soft,
+    surfaceBright: AppColors.cream,
+    surfaceTint: Colors.transparent,
+    primaryFixed: AppColors.soft,
+    primaryFixedDim: AppColors.border,
+    onPrimaryFixed: AppColors.red,
+    onPrimaryFixedVariant: AppColors.red,
+    secondaryFixed: AppColors.soft,
+    secondaryFixedDim: AppColors.border,
+    onSecondaryFixed: AppColors.red,
+    onSecondaryFixedVariant: AppColors.red,
+    tertiaryFixed: AppColors.soft,
+    tertiaryFixedDim: AppColors.border,
+    onTertiaryFixed: AppColors.red,
+    onTertiaryFixedVariant: AppColors.red,
+    // ignore: deprecated_member_use
+    surfaceVariant: AppColors.soft,
+    // ignore: deprecated_member_use
+    background: AppColors.cream,
+    // ignore: deprecated_member_use
+    onBackground: AppColors.red,
   );
   final shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(16));
   final button = FilledButton.styleFrom(
@@ -106,6 +133,35 @@ ThemeData buildAppTheme() {
         labelColor: AppColors.red,
         unselectedLabelColor: AppColors.muted,
         indicatorSize: TabBarIndicatorSize.label),
-    snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
+    snackBarTheme: const SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.red,
+        contentTextStyle: TextStyle(color: AppColors.cream),
+        actionTextColor: AppColors.cream),
+    dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.cream,
+        surfaceTintColor: Colors.transparent,
+        shape: shape),
+    bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.cream,
+        surfaceTintColor: Colors.transparent,
+        dragHandleColor: AppColors.border),
+    popupMenuTheme: const PopupMenuThemeData(
+        color: AppColors.cream, surfaceTintColor: Colors.transparent),
+    chipTheme: ChipThemeData(
+        backgroundColor: AppColors.cream,
+        selectedColor: AppColors.soft,
+        side: const BorderSide(color: AppColors.border),
+        labelStyle: const TextStyle(color: AppColors.red),
+        checkmarkColor: AppColors.red,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+    floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: AppColors.red, foregroundColor: AppColors.cream),
+    progressIndicatorTheme:
+        const ProgressIndicatorThemeData(color: AppColors.red),
+    navigationBarTheme: const NavigationBarThemeData(
+        backgroundColor: AppColors.cream,
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: AppColors.soft),
   );
 }

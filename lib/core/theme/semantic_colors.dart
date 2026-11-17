@@ -13,7 +13,7 @@ abstract final class SemanticColors {
         _ => const Color(0xFF78534A),
       };
   static Color role(String role) => switch (role) {
-        'ADMIN' => const Color(0xFF70418A),
+        'ADMIN' => const Color(0xFF8B1A1A),
         'STAFF' => review,
         'TUTOR' => approved,
         _ => const Color(0xFF78534A),
