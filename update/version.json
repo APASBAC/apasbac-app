@@ -1,18 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "stable",
-  "versionCode": 9,
-  "versionName": "1.0.6-beta",
+  "versionCode": 10,
+  "versionName": "1.0.7-beta",
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "O aplicativo procura atualizações também ao voltar para ele, sem precisar fechar.",
-    "Lembretes de monitoramento: avisos 3 dias antes, 1 dia antes, no dia do prazo e se atrasar.",
-    "Tela inicial mostra Meus Animais e Monitoramentos só quando há algo para ver."
+    "Opção \"Lembrar de mim\" no login: continue conectado ou saia ao fechar o aplicativo.",
+    "Sessão renovada automaticamente em segundo plano; se expirar, o app volta ao login com aviso.",
+    "Sair da conta encerra a sessão também no servidor.",
+    "Sem internet, o aplicativo abre com a última conta conectada."
   ],
-  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.6-beta/app-release.apk",
-  "sha256": "1949fab6b2f3db080d89d4bea050c08ebc71942d6df8e0de345b29fa52889c25",
-  "sizeBytes": 56552833,
-  "publishedAt": "2026-11-17T12:56:40Z",
+  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.7-beta/app-release.apk",
+  "sha256": "9311d3f148c246fef903f102c6cdd3c21b5fbedd2d997b09d09e9575ccb84315",
+  "sizeBytes": 56831441,
+  "publishedAt": "2026-11-17T14:53:04Z",
   "certificateSha256": "bd3062fd35e97bec46269c44e32e2daf32ad5a9a9afabe8054f5c1f83ce95578"
 }
