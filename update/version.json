@@ -1,17 +1,18 @@
 {
   "schemaVersion": 1,
   "channel": "stable",
-  "versionCode": 4,
-  "versionName": "1.0.1-beta",
+  "versionCode": 6,
+  "versionName": "1.0.3-beta",
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Fotos dos animais e do monitoramento agora carregam no aplicativo.",
-    "Se uma foto falhar, aparece a opção de tocar para tentar de novo."
+    "Cadastro de animal: novo campo Espécie (Cachorro, Gato ou outra).",
+    "Cores do aplicativo seguem a identidade da APASBAC em todas as telas.",
+    "Fotos dos animais e do monitoramento carregam no aplicativo."
   ],
-  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.1-beta/app-release.apk",
-  "sha256": "3b5fdd66fde4b7d7be371382d9306f6637812ab1f626e903abca532163efcd15",
-  "sizeBytes": 55403855,
-  "publishedAt": "2026-11-17T12:18:31Z",
+  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.3-beta/app-release.apk",
+  "sha256": "1a85ad246c4079bb49d658a8a6b99deedd662fb622819f90f1552e3643822a1d",
+  "sizeBytes": 55420239,
+  "publishedAt": "2026-11-17T12:23:54Z",
   "certificateSha256": "bd3062fd35e97bec46269c44e32e2daf32ad5a9a9afabe8054f5c1f83ce95578"
 }
