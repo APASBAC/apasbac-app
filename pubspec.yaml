@@ -1,7 +1,7 @@
 name: apasbac_app
 description: App da APASBAC — Associação de Proteção aos Animais Socorro Bicho Assis Chateaubriand
 publish_to: 'none'
-version: 1.0.0-beta+3
+version: 1.0.1-beta+4
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -22,8 +22,6 @@ dependencies:
   image_picker: ^1.1.2
   # Video player (preview)
   video_player: ^2.8.6
-  # Cached images
-  cached_network_image: ^3.3.1
   # Date formatting
   intl: ^0.19.0
   # Icons

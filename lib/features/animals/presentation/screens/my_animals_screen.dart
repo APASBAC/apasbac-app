@@ -3,7 +3,7 @@ import '../../../../core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import '../../../../core/widgets/network_photo.dart';
 import '../../../../providers.dart';
 import '../../../../core/models/animal_model.dart';
 
@@ -68,16 +68,13 @@ class _AnimalCard extends StatelessWidget {
                 width: 110,
                 height: 110,
                 child: photo != null
-                    ? CachedNetworkImage(
-                        imageUrl: photo.url,
+                    ? NetworkPhoto(
+                        url: photo.url,
                         fit: BoxFit.cover,
-                        placeholder: (_, __) => Container(
-                          color: cs.surfaceVariant,
-                          child: const Center(
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        ),
-                        errorWidget: (_, __, ___) => _PhotoPlaceholder(),
+                        width: 110,
+                        height: 110,
+                        cacheWidth: 330,
+                        error: _PhotoPlaceholder(),
                       )
                     : _PhotoPlaceholder(),
               ),

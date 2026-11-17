@@ -2,9 +2,7 @@
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Fotos dos animais e mídias do monitoramento voltam a carregar.",
-    "Card do animal no monitoramento mostra raça, sexo e foto reais.",
-    "Administração: aba com todos os animais e pesquisa de usuários na adoção, nos monitoramentos e na lista de usuários.",
-    "Atualizações futuras são baixadas e instaladas pelo próprio aplicativo."
+    "Fotos dos animais e do monitoramento agora carregam no aplicativo.",
+    "Se uma foto falhar, aparece a opção de tocar para tentar de novo."
   ]
 }

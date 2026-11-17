@@ -4,7 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import '../../../../core/widgets/network_photo.dart';
 import '../../../../core/widgets/search_field.dart';
 import '../../../../core/models/animal_model.dart';
 import '../../../../core/models/monitoring_model.dart';
@@ -431,14 +431,14 @@ class _AnimalAvatar extends StatelessWidget {
     );
     if (photo == null) return fallback;
     return ClipOval(
-      child: CachedNetworkImage(
-        imageUrl: photo.url,
+      child: NetworkPhoto(
+        url: photo.url,
         width: 48,
         height: 48,
         fit: BoxFit.cover,
-        memCacheWidth: 144,
-        placeholder: (_, __) => fallback,
-        errorWidget: (_, __, ___) => fallback,
+        cacheWidth: 144,
+        placeholder: fallback,
+        error: fallback,
       ),
     );
   }

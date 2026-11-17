@@ -4,7 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import '../../../../core/widgets/network_photo.dart';
 import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
 import '../../../../providers.dart';
@@ -73,19 +73,19 @@ class _MonitoringDetailView extends StatelessWidget {
                 contentPadding: const EdgeInsets.all(12),
                 leading: CircleAvatar(
                   radius: 28,
-                  backgroundImage: monitoring.animal!.primaryPhoto != null
-                      ? CachedNetworkImageProvider(
-                          monitoring.animal!.primaryPhoto!.url,
-                        )
-                      : null,
-                  onBackgroundImageError:
-                      monitoring.animal!.primaryPhoto != null
-                      ? (_, __) {}
-                      : null,
                   backgroundColor: cs.primaryContainer,
                   child: monitoring.animal!.primaryPhoto == null
                       ? Icon(Icons.pets, color: cs.onPrimaryContainer)
-                      : null,
+                      : ClipOval(
+                          child: NetworkPhoto(
+                            url: monitoring.animal!.primaryPhoto!.url,
+                            width: 56,
+                            height: 56,
+                            cacheWidth: 168,
+                            error: Icon(Icons.pets,
+                                color: cs.onPrimaryContainer),
+                          ),
+                        ),
                 ),
                 title: Text(
                   monitoring.animal!.name,
@@ -334,15 +334,10 @@ class _MediaGrid extends StatelessWidget {
                           size: 40,
                         ),
                       )
-                    : CachedNetworkImage(
-                        imageUrl: media.url,
+                    : NetworkPhoto(
+                        url: media.url,
                         fit: BoxFit.cover,
-                        placeholder: (_, __) =>
-                            Container(color: AppColors.soft),
-                        errorWidget: (_, __, ___) => Container(
-                          color: AppColors.soft,
-                          child: const Icon(Icons.broken_image_outlined),
-                        ),
+                        cacheWidth: 400,
                       ),
               ),
               if (media.isVideo)
@@ -388,14 +383,9 @@ class _MediaPreviewDialog extends StatelessWidget {
               child: media.isVideo
                   ? _NetworkVideoPlayer(url: media.url)
                   : InteractiveViewer(
-                      child: CachedNetworkImage(
-                        imageUrl: media.url,
+                      child: NetworkPhoto(
+                        url: media.url,
                         fit: BoxFit.contain,
-                        placeholder: (_, __) =>
-                            const Center(child: CircularProgressIndicator()),
-                        errorWidget: (_, __, ___) => const Center(
-                          child: Icon(Icons.broken_image_outlined),
-                        ),
                       ),
                     ),
             ),

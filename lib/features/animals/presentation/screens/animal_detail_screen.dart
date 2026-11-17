@@ -2,7 +2,7 @@ import '../../../../core/widgets/apasbac_loading.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import '../../../../core/widgets/network_photo.dart';
 import '../../../../providers.dart';
 import '../../../../core/models/animal_model.dart';
 
@@ -58,19 +58,11 @@ class _AnimalDetailViewState extends State<_AnimalDetailView> {
                           itemCount: animal.photos.length,
                           onPageChanged: (i) =>
                               setState(() => _currentPhoto = i),
-                          itemBuilder: (_, i) => CachedNetworkImage(
-                            imageUrl: animal.photos[i].url,
+                          itemBuilder: (_, i) => NetworkPhoto(
+                            url: animal.photos[i].url,
                             fit: BoxFit.cover,
-                            placeholder: (_, __) =>
-                                Container(color: cs.surfaceVariant),
-                            errorWidget: (_, __, ___) => Container(
-                              color: cs.surfaceVariant,
-                              child: const Icon(
-                                Icons.pets,
-                                size: 80,
-                                color: AppColors.muted,
-                              ),
-                            ),
+                            width: double.infinity,
+                            height: double.infinity,
                           ),
                         ),
                         if (animal.photos.length > 1)
