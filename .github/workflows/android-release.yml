@@ -71,7 +71,9 @@ jobs:
         env:
           EXPECTED_CERT_SHA256: ${{ vars.ANDROID_SIGNING_CERT_SHA256 }}
         run: |
-          sdkmanager 'build-tools;36.0.0'
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          [ -x "$SDKM" ] || SDKM=$(command -v sdkmanager)
+          yes | "$SDKM" 'build-tools;36.0.0' >/dev/null
           python3 tool/release.py prepare \
             --aapt "$ANDROID_HOME/build-tools/36.0.0/aapt" \
             --apksigner "$ANDROID_HOME/build-tools/36.0.0/apksigner"
