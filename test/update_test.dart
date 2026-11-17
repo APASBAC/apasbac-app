@@ -213,6 +213,28 @@ void main() {
     expect(m.visible, false);
     expect(p.downloads, 0);
   });
+  test('a newer release reappears after Depois, also when resuming the app',
+      () async {
+    var remote = fixture();
+    final dio = Dio()
+      ..interceptors.add(InterceptorsWrapper(
+          onRequest: (r, h) => h.resolve(Response(
+              requestOptions: r, statusCode: 200, data: jsonEncode(remote)))));
+    final p = FakePlatform();
+    final m =
+        UpdateManager(platform: p, repository: UpdateRepository(http: dio));
+    addTearDown(m.dispose);
+    await m.start();
+    m.later();
+    expect(m.visible, false);
+    await m.check(force: true);
+    expect(m.visible, false, reason: 'same version stays dismissed');
+    remote = fixture(code: 13);
+    await m.check(force: true);
+    expect(m.visible, true);
+    expect(m.manifest?.versionCode, 13);
+    expect(p.downloads, 0);
+  });
   test('supported offline startup allows normal use', () async {
     final m = await manager(FakePlatform()..online = false);
     expect(m.visible, false);

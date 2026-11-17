@@ -40,6 +40,7 @@ class UpdateManager extends ChangeNotifier {
   int _serverMinimum = 0;
   Timer? _timer;
   DateTime? _lastCheck;
+  int? _dismissedCode;
   bool get busy =>
       _action ||
       {UpdateState.downloading, UpdateState.verifying, UpdateState.installing}
@@ -144,6 +145,12 @@ class UpdateManager extends ChangeNotifier {
             'UpdateCheck: installedCode=${installed!.code} remoteCode=${m?.versionCode} update=${m?.isNewerThan(installed!.code) ?? false}');
       }
       if (m != null && m.isNewerThan(installed!.code)) {
+        // "Depois" vale para a versão dispensada; uma versão mais nova aparece de novo.
+        if (dismissed &&
+            _dismissedCode != null &&
+            m.versionCode > _dismissedCode!) {
+          dismissed = false;
+        }
         state = UpdateState.updateAvailable;
         if (_announced.add(m.versionCode)) {
           try {
@@ -286,6 +293,7 @@ class UpdateManager extends ChangeNotifier {
   void later() {
     if (canPostpone) {
       dismissed = true;
+      _dismissedCode = manifest?.versionCode;
       unawaited(platform.postpone().catchError((_) {}));
       _emit();
     }
@@ -301,6 +309,9 @@ class UpdateManager extends ChangeNotifier {
       await platform.resume();
       await poll();
     } catch (_) {}
+    // Ao voltar para o app (sem fechá-lo), também procura versão nova.
+    // check() limita a uma consulta a cada 5 minutos.
+    if (!busy) await check();
   }
 
   @override

@@ -2,8 +2,8 @@
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
+    "O aplicativo procura atualizações também ao voltar para ele, sem precisar fechar.",
     "Lembretes de monitoramento: avisos 3 dias antes, 1 dia antes, no dia do prazo e se atrasar.",
-    "Tela inicial mostra Meus Animais e Monitoramentos só quando há algo para ver.",
-    "Atualização automática mais compatível com celulares de diferentes fabricantes."
+    "Tela inicial mostra Meus Animais e Monitoramentos só quando há algo para ver."
   ]
 }
