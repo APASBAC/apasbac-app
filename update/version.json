@@ -1,19 +1,17 @@
 {
   "schemaVersion": 1,
   "channel": "stable",
-  "versionCode": 3,
-  "versionName": "1.0.0-beta",
+  "versionCode": 4,
+  "versionName": "1.0.1-beta",
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Fotos dos animais e mídias do monitoramento voltam a carregar.",
-    "Card do animal no monitoramento mostra raça, sexo e foto reais.",
-    "Administração: aba com todos os animais e pesquisa de usuários na adoção, nos monitoramentos e na lista de usuários.",
-    "Atualizações futuras são baixadas e instaladas pelo próprio aplicativo."
+    "Fotos dos animais e do monitoramento agora carregam no aplicativo.",
+    "Se uma foto falhar, aparece a opção de tocar para tentar de novo."
   ],
-  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.0-beta/app-release.apk",
-  "sha256": "9ab48351d8ce613dcfbcb1ad867de760a0d6d3eecdb6d427ce9ddf61d47c59cf",
-  "sizeBytes": 56256019,
-  "publishedAt": "2026-11-17T11:52:29Z",
+  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.1-beta/app-release.apk",
+  "sha256": "3b5fdd66fde4b7d7be371382d9306f6637812ab1f626e903abca532163efcd15",
+  "sizeBytes": 55403855,
+  "publishedAt": "2026-11-17T12:18:31Z",
   "certificateSha256": "bd3062fd35e97bec46269c44e32e2daf32ad5a9a9afabe8054f5c1f83ce95578"
 }
