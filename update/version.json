@@ -1,19 +1,18 @@
 {
   "schemaVersion": 1,
   "channel": "stable",
-  "versionCode": 7,
-  "versionName": "1.0.4-beta",
+  "versionCode": 8,
+  "versionName": "1.0.5-beta",
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Atualização automática mais compatível: se o instalador do aparelho recusar, o app usa o instalador padrão do Android.",
-    "Cadastro de animal: novo campo Espécie (Cachorro, Gato ou outra).",
-    "Cores do aplicativo seguem a identidade da APASBAC em todas as telas.",
-    "Fotos dos animais e do monitoramento carregam no aplicativo."
+    "Lembretes de monitoramento: avisos 3 dias antes, 1 dia antes, no dia do prazo e se atrasar.",
+    "Tela inicial mostra Meus Animais e Monitoramentos só quando há algo para ver.",
+    "Atualização automática mais compatível com celulares de diferentes fabricantes."
   ],
-  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.4-beta/app-release.apk",
-  "sha256": "5100106d9e27814812c658f32022e1f03cece13550c2a22ad4d9fd6c6737abef",
-  "sizeBytes": 55420283,
-  "publishedAt": "2026-11-17T12:31:55Z",
+  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.5-beta/app-release.apk",
+  "sha256": "e65051b4fd3888d37af306a8462e728f7f106c0148f15abcb366fbf05415f5e4",
+  "sizeBytes": 56552833,
+  "publishedAt": "2026-11-17T12:46:58Z",
   "certificateSha256": "bd3062fd35e97bec46269c44e32e2daf32ad5a9a9afabe8054f5c1f83ce95578"
 }
