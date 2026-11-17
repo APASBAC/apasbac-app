@@ -32,7 +32,15 @@ class InstallStatusReceiver : BroadcastReceiver() {
                 // The old process can die before this callback. Startup also detects success.
                 store.recover()
             }
-            else -> store.fail("install")
+            else -> {
+                val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)
+                val message = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)
+                // O instalador por sessão falhou neste aparelho: a próxima tentativa usa o
+                // instalador padrão do Android, compatível com as interfaces dos fabricantes.
+                store.prefs.edit().putBoolean("useSystemInstaller", true).commit()
+                store.fail(if (status == PackageInstaller.STATUS_FAILURE_ABORTED) "aborted" else "install",
+                    "código $status" + (message?.takeIf { it.isNotBlank() }?.let { " — $it" } ?: ""))
+            }
         }
     }
 }

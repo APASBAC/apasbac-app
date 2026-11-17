@@ -67,6 +67,7 @@ gradle.taskGraph.whenReady {
 }
 
 dependencies {
+    implementation("androidx.core:core:1.13.1")
     testImplementation("junit:junit:4.13.2")
 }
 

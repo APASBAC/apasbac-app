@@ -8,6 +8,7 @@ import android.content.pm.PackageInstaller
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import androidx.core.content.FileProvider
 import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
 
@@ -37,6 +38,15 @@ object UpdateInstaller {
         if (store.state == "needsUserPermission" && store.prefs.getBoolean("permissionRequested", false) && allowed(activity)) {
             install(activity)
         }
+        if (store.state == "installing" && store.prefs.getBoolean("systemInstallerOpened", false) &&
+            System.currentTimeMillis() - store.prefs.getLong("installStarted", 0) > 2000) {
+            // Voltou do instalador do Android sem a versão nova: a pessoa cancelou.
+            // Mantém o arquivo verificado e oferece abrir o instalador de novo.
+            store.prefs.edit().remove("systemInstallerOpened").remove("permissionRequested").commit()
+            store.state("needsUserPermission",
+                "A atualização ainda não foi instalada. Toque no botão abaixo e confirme em \"Atualizar\" ou \"Instalar\".")
+            return
+        }
         if (store.state == "installing") {
             store.prefs.getString("pendingAction", null)?.let { action ->
                 store.prefs.edit().remove("pendingAction").commit()
@@ -50,6 +60,10 @@ object UpdateInstaller {
         if (preparing || store.state !in listOf("readyToInstall", "needsUserPermission")) return@synchronized
         if (!allowed(context)) { store.state("needsUserPermission"); return@synchronized }
         val manifest = store.manifest ?: return@synchronized
+        if (store.prefs.getBoolean("useSystemInstaller", false)) {
+            systemInstall(context, store, manifest)
+            return@synchronized
+        }
         preparing = true
         store.state("installing")
         val app = context.applicationContext
@@ -82,8 +96,33 @@ object UpdateInstaller {
                 }
             } catch (e: Exception) {
                 if (sessionId >= 0) runCatching { app.packageManager.packageInstaller.abandonSession(sessionId) }
-                store.fail((e as? UpdateFailure)?.reason ?: "install")
+                val reason = (e as? UpdateFailure)?.reason
+                if (reason == null) store.prefs.edit().putBoolean("useSystemInstaller", true).commit()
+                store.fail(reason ?: "install", if (reason == null) e.javaClass.simpleName else null)
             } finally { preparing = false }
+        }
+    }
+
+    /** Abre o instalador padrão do Android com o APK já verificado (hash, pacote e assinatura). */
+    private fun systemInstall(context: Context, store: UpdateStore, manifest: UpdateManifest) {
+        val app = context.applicationContext
+        try {
+            UpdateVerifier(app).verify(store.apk, manifest)
+            val uri = FileProvider.getUriForFile(app, "${app.packageName}.fileprovider", store.apk)
+            val intent = Intent(Intent.ACTION_VIEW)
+                .setDataAndType(uri, "application/vnd.android.package-archive")
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+            store.prefs.edit().putBoolean("installRequested", true).putBoolean("systemInstallerOpened", true)
+                .putLong("installStarted", System.currentTimeMillis()).remove("sessionId")
+                .remove("permissionRequested").commit()
+            store.state("installing", "Confirme a atualização na tela do Android.")
+            store.event("update_install_requested")
+            val activity = foreground.get() ?: (context as? Activity)
+            if (activity != null && !activity.isFinishing) activity.startActivity(intent)
+            else UpdateNotifications.show(app, "Toque para confirmar a atualização.", intent)
+        } catch (e: Exception) {
+            store.prefs.edit().remove("systemInstallerOpened").commit()
+            store.fail((e as? UpdateFailure)?.reason ?: "install", if (e is UpdateFailure) null else e.javaClass.simpleName)
         }
     }
 }

@@ -2,4 +2,6 @@
 <paths>
     <external-path name="external_files" path="."/>
     <cache-path name="cache_files" path="."/>
-</paths>    
+    <!-- APK de atualização já verificado, entregue ao instalador padrão do Android. -->
+    <files-path name="updates" path="updates/"/>
+</paths>

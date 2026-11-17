@@ -35,7 +35,7 @@ class UpdateStore(val context: Context) {
             android.util.Log.d("AppUpdate", name)
         }
     }
-    fun fail(reason: String) = synchronized(lock) {
+    fun fail(reason: String, detail: String? = null) = synchronized(lock) {
         part.delete()
         apk.delete()
         val message = when (reason) {
@@ -44,11 +44,12 @@ class UpdateStore(val context: Context) {
             "sdk" -> "Esta atualização exige uma versão mais recente do Android."
             "interrupted" -> "A atualização foi interrompida. Toque em Tentar novamente."
             "install" -> "A instalação não foi concluída. Tente novamente e confirme a atualização no Android."
+            "aborted" -> "A instalação foi cancelada. Toque em Tentar novamente e confirme a atualização."
             else -> "Não foi possível baixar a atualização. Verifique sua conexão e tente novamente."
         }
         prefs.edit().putInt("failures", prefs.getInt("failures", 0) + 1)
             .remove("pendingAction").remove("permissionRequested").commit()
-        state("failed", message)
+        state("failed", if (detail.isNullOrBlank()) message else "$message\n(Detalhe: $detail)")
         event(if (reason == "hash") "update_hash_failed" else "update_install_failed")
     }
     fun cleanup() { part.delete(); apk.delete() }
@@ -63,14 +64,21 @@ class UpdateStore(val context: Context) {
             cleanup()
             context.getSystemService(android.app.NotificationManager::class.java).cancel(UpdateNotifications.ID)
             prefs.edit().remove("manifest").remove("sessionId").remove("pendingAction")
-                .remove("permissionRequested").putBoolean("installRequested", false)
+                .remove("permissionRequested").remove("systemInstallerOpened").putBoolean("installRequested", false)
                 .putInt("failures", 0).commit()
             state("idle")
         } else if (state in listOf("downloading", "verifying") && !UpdateDownloadService.running) {
             fail("interrupted")
+        } else if (state == "installing" && !UpdateInstaller.preparing &&
+            prefs.getBoolean("systemInstallerOpened", false)) {
+            // Instalador padrão do Android: não há sessão para acompanhar.
+            if (System.currentTimeMillis() - prefs.getLong("installStarted", 0) > 600000) fail("install")
         } else if (state == "installing" && !UpdateInstaller.preparing) {
+            val elapsed = System.currentTimeMillis() - prefs.getLong("installStarted", 0)
             val session = context.packageManager.packageInstaller.getSessionInfo(prefs.getInt("sessionId", -1))
-            if (session == null || System.currentTimeMillis() - prefs.getLong("installStarted", 0) > 600000) {
+            // Alguns fabricantes assumem a instalação e encerram a sessão antes de concluir:
+            // aguarda um pouco antes de considerar falha (o sucesso é detectado acima).
+            if ((session == null && elapsed > 180000) || elapsed > 600000) {
                 session?.let { runCatching { context.packageManager.packageInstaller.abandonSession(it.sessionId) } }
                 fail("install")
             }
