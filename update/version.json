@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "channel": "stable",
-  "versionCode": 16,
-  "versionName": "1.0.13-alpha",
+  "versionCode": 17,
+  "versionName": "1.0.14-alpha",
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Mensagens de erro claras: sem internet, conexão lenta, servidor fora do ar, sessão expirada e outros, com o que fazer em cada caso.",
-    "Telas de erro com ícone e botão para tentar de novo.",
-    "Envio do relatório do monitoramento corrigido."
+    "Novo visualizador de fotos e vídeo do monitoramento em tela cheia: deslize para o lado, amplie com dois dedos ou toque duplo e arraste para baixo para fechar.",
+    "Vídeo com barra de progresso, tempo, som e tela cheia na horizontal; os controles somem sozinhos.",
+    "Vídeo em destaque com imagem de capa na tela do monitoramento."
   ],
-  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.13-alpha/app-release.apk",
-  "sha256": "2e315f991cc6d5874c37eed60dc501830a1bd3706af3be5f044721bce4bfd44b",
-  "sizeBytes": 57431465,
-  "publishedAt": "2026-11-25T14:02:45Z",
+  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.14-alpha/app-release.apk",
+  "sha256": "2efe2968c95c0e9ce69b8798a8f75a41c0769f30a84a14733f489bf3aeafe84b",
+  "sizeBytes": 57694165,
+  "publishedAt": "2026-11-25T16:21:41Z",
   "certificateSha256": "bd3062fd35e97bec46269c44e32e2daf32ad5a9a9afabe8054f5c1f83ce95578"
 }
