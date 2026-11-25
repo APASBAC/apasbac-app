@@ -2,9 +2,8 @@
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Envio do monitoramento em segundo plano: toque em Enviar e pode sair do aplicativo.",
-    "Notificação com o progresso do envio e aviso quando terminar.",
-    "Sem internet, o envio espera e continua sozinho; se o app for fechado, retoma ao abrir sem reenviar o que já subiu.",
-    "Vídeos grandes enviados sem pesar na memória do celular."
+    "O aplicativo agora se chama Socorro Bicho, com ícone novo: a logo da APASBAC com patinhas, corações e raios de sol.",
+    "Notificações com ícone de patinha.",
+    "Envio do monitoramento em segundo plano: toque em Enviar e pode sair do aplicativo."
   ]
 }

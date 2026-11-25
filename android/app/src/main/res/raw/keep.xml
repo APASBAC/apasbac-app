@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Recursos usados só pelo Dart (notificações): não podem ser removidos pelo encolhimento do release. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_stat_paw,@mipmap/ic_launcher" />

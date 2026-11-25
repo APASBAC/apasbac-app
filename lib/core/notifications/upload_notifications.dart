@@ -53,7 +53,7 @@ class AndroidUploadNotifier implements UploadNotifier {
           progress: pct,
           indeterminate: indeterminate,
           color: _color,
-          icon: '@mipmap/ic_launcher',
+          icon: 'ic_stat_paw',
         ),
       );
       _serviceOn = true;

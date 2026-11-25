@@ -94,12 +94,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.release.outputs.tag }}
         run: |
+          # Título pelo sufixo da versão: v1.0.9-alpha → "Alpha 1.0.9"; v1.0.8-beta → "Beta 1.0.8".
+          LABEL=$(echo "$TAG" | sed -nE 's/^v[0-9.]+-([a-z]+).*/\1/p')
+          NUM=$(echo "$TAG" | sed -E 's/^v([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+          if [ -n "$LABEL" ]; then TITLE="$(echo "${LABEL:0:1}" | tr a-z A-Z)${LABEL:1} $NUM"; else TITLE="$NUM"; fi
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "A tag $TAG já tem release. Aumente o número após '+' em pubspec.yaml (e o nome da versão) para publicar outra; o APK publicado nunca é substituído." >&2
             exit 1
           fi
           gh release create "$TAG" --draft --target main --prerelease \
-            --title "Beta $(echo "$TAG" | sed -E 's/^v([0-9]+\.[0-9]+)\..*/\1/')" \
+            --title "$TITLE" \
             --notes-file build/release/notes.md \
             build/app/outputs/flutter-apk/app-release.apk build/release/version.json
           gh release edit "$TAG" --draft=false

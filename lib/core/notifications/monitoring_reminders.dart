@@ -53,7 +53,7 @@ class MonitoringReminders {
     try {
       await _plugin.initialize(
         settings: const InitializationSettings(
-            android: AndroidInitializationSettings('@mipmap/ic_launcher')),
+            android: AndroidInitializationSettings('ic_stat_paw')),
         onDidReceiveNotificationResponse: (r) => _open(r.payload),
       );
       final launch = await _plugin.getNotificationAppLaunchDetails();

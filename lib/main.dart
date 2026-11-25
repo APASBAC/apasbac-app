@@ -46,7 +46,7 @@ class ApasbacApp extends ConsumerWidget {
     });
 
     return MaterialApp.router(
-      title: 'APASBAC',
+      title: 'Socorro Bicho',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
       routerConfig: router,
