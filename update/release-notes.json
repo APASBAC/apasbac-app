@@ -2,8 +2,8 @@
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Mensagens de erro claras: sem internet, conexão lenta, servidor fora do ar, sessão expirada e outros, com o que fazer em cada caso.",
-    "Telas de erro com ícone e botão para tentar de novo.",
-    "Envio do relatório do monitoramento corrigido."
+    "Novo visualizador de fotos e vídeo do monitoramento em tela cheia: deslize para o lado, amplie com dois dedos ou toque duplo e arraste para baixo para fechar.",
+    "Vídeo com barra de progresso, tempo, som e tela cheia na horizontal; os controles somem sozinhos.",
+    "Vídeo em destaque com imagem de capa na tela do monitoramento."
   ]
 }

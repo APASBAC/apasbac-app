@@ -43,3 +43,17 @@ String normalizeVideoUrl(String? raw) {
   if (url.startsWith('http://')) url = 'https://${url.substring(7)}';
   return url;
 }
+
+/// Imagem de capa de um vídeo do Cloudinary (quadro de 1 s, em JPG).
+/// Retorna null para vídeos fora do Cloudinary.
+String? videoPosterUrl(String? raw, {int width = 720}) {
+  final url = normalizeVideoUrl(raw);
+  const marker = '/video/upload/';
+  if (!url.contains('res.cloudinary.com') || !url.contains(marker)) return null;
+  final i = url.indexOf(marker) + marker.length;
+  var rest = url.substring(i);
+  final dot = rest.lastIndexOf('.');
+  final slash = rest.lastIndexOf('/');
+  if (dot > slash) rest = rest.substring(0, dot);
+  return '${url.substring(0, i)}so_1,w_$width,c_limit,q_auto/$rest.jpg';
+}

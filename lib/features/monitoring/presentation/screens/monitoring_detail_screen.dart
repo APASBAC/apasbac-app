@@ -7,9 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/network_photo.dart';
 import 'package:intl/intl.dart';
-import 'package:video_player/video_player.dart';
 import '../../../../providers.dart';
 import '../widgets/upload_status_card.dart';
+import '../widgets/media_gallery.dart';
 import '../../../../core/models/monitoring_model.dart';
 
 class MonitoringDetailScreen extends ConsumerWidget {
@@ -199,7 +199,7 @@ class _MonitoringDetailView extends StatelessWidget {
           if (monitoring.medias.isNotEmpty) ...[
             _SectionTitle('Mídias enviadas (${monitoring.medias.length})'),
             const SizedBox(height: 10),
-            _MediaGrid(medias: monitoring.medias),
+            MonitoringMediaSection(medias: monitoring.medias),
             const SizedBox(height: 20),
           ],
 
@@ -301,179 +301,6 @@ class _StatusBanner extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _MediaGrid extends StatelessWidget {
-  final List<MonitoringMedia> medias;
-  const _MediaGrid({required this.medias});
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemCount: medias.length,
-      itemBuilder: (_, i) {
-        final media = medias[i];
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              InkWell(
-                onTap: () => showDialog(
-                  context: context,
-                  builder: (_) => _MediaPreviewDialog(media: media),
-                ),
-                child: media.isVideo
-                    ? Container(
-                        color: Colors.black87,
-                        child: const Icon(
-                          Icons.play_circle_filled_rounded,
-                          color: AppColors.cream,
-                          size: 40,
-                        ),
-                      )
-                    : NetworkPhoto(
-                        url: media.url,
-                        fit: BoxFit.cover,
-                        cacheWidth: 400,
-                      ),
-              ),
-              if (media.isVideo)
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Text(
-                      'VID',
-                      style: TextStyle(color: AppColors.cream, fontSize: 10),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _MediaPreviewDialog extends StatelessWidget {
-  final MonitoringMedia media;
-  const _MediaPreviewDialog({required this.media});
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.all(16),
-      child: AspectRatio(
-        aspectRatio: 1,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: media.isVideo
-                  ? _NetworkVideoPlayer(url: media.url)
-                  : InteractiveViewer(
-                      child: NetworkPhoto(
-                        url: media.url,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-            ),
-            Positioned(
-              top: 4,
-              right: 4,
-              child: IconButton.filledTonal(
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.close_rounded),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _NetworkVideoPlayer extends StatefulWidget {
-  final String url;
-  const _NetworkVideoPlayer({required this.url});
-
-  @override
-  State<_NetworkVideoPlayer> createState() => _NetworkVideoPlayerState();
-}
-
-class _NetworkVideoPlayerState extends State<_NetworkVideoPlayer> {
-  late final VideoPlayerController _controller;
-  late final Future<void> _init;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url));
-    _init = _controller.initialize().then((_) {
-      _controller.play();
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<void>(
-      future: _init,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (!_controller.value.isInitialized) {
-          return const Center(child: Icon(Icons.error_outline));
-        }
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            AspectRatio(
-              aspectRatio: _controller.value.aspectRatio,
-              child: VideoPlayer(_controller),
-            ),
-            IconButton.filled(
-              onPressed: () {
-                setState(() {
-                  _controller.value.isPlaying
-                      ? _controller.pause()
-                      : _controller.play();
-                });
-              },
-              icon: Icon(
-                _controller.value.isPlaying
-                    ? Icons.pause_rounded
-                    : Icons.play_arrow_rounded,
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 }
