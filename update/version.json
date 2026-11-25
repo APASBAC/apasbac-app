@@ -1,18 +1,17 @@
 {
   "schemaVersion": 1,
   "channel": "stable",
-  "versionCode": 17,
-  "versionName": "1.0.14-alpha",
+  "versionCode": 18,
+  "versionName": "1.0.15-alpha",
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Novo visualizador de fotos e vídeo do monitoramento em tela cheia: deslize para o lado, amplie com dois dedos ou toque duplo e arraste para baixo para fechar.",
-    "Vídeo com barra de progresso, tempo, som e tela cheia na horizontal; os controles somem sozinhos.",
-    "Vídeo em destaque com imagem de capa na tela do monitoramento."
+    "Administração: o Admin pode apagar um monitoramento (com as fotos e o vídeo) pela aba Validações ou pela tela do monitoramento, com confirmação.",
+    "Novo visualizador de fotos e vídeo do monitoramento em tela cheia."
   ],
-  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.14-alpha/app-release.apk",
-  "sha256": "2efe2968c95c0e9ce69b8798a8f75a41c0769f30a84a14733f489bf3aeafe84b",
-  "sizeBytes": 57694165,
-  "publishedAt": "2026-11-25T16:21:41Z",
+  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.15-alpha/app-release.apk",
+  "sha256": "72b3bcbd76f747b09c14a1ad51b457ba59c5bf577a0bad9ae5e512ebf36be1e7",
+  "sizeBytes": 57710713,
+  "publishedAt": "2026-11-25T16:54:41Z",
   "certificateSha256": "bd3062fd35e97bec46269c44e32e2daf32ad5a9a9afabe8054f5c1f83ce95578"
 }
