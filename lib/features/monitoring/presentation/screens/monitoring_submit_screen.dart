@@ -134,9 +134,12 @@ class _MonitoringSubmitScreenState
       if (mounted) setState(() => _error = msg);
     } catch (e) {
       if (mounted) {
+        debugPrint('[Envio] falha ao preparar: $e');
+        final first = e.toString().split('\n').first;
         setState(() => _error = e is StateError
             ? e.message
-            : 'Não foi possível preparar o envio: $e');
+            : 'Não foi possível preparar o envio. Tente novamente.\n'
+                '(${first.length > 120 ? '${first.substring(0, 120)}…' : first})');
       }
     } finally {
       if (mounted) setState(() => _loading = false);

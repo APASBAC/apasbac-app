@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -115,7 +116,7 @@ class MonitoringUploadQueue extends ChangeNotifier {
     ],
   })  : _upload = upload ?? _defaultUpload,
         _finish = finish ?? _defaultFinish,
-        _directory = directory ?? getApplicationSupportDirectory,
+        _directory = directory ?? _appFilesDir,
         _notifier = notifier;
 
   static MonitoringUploadQueue instance = MonitoringUploadQueue();
@@ -143,6 +144,17 @@ class MonitoringUploadQueue extends ChangeNotifier {
       if (j.monitoringId == monitoringId) return j;
     }
     return null;
+  }
+
+  /// Pasta privada do app, pedida ao código nativo do próprio app. O
+  /// path_provider usa JNI e falhava no APK de release (classe removida pelo R8).
+  static Future<Directory> _appFilesDir() async {
+    try {
+      final path = await const MethodChannel('org.apasbac/app_update')
+          .invokeMethod<String>('filesDir');
+      if (path != null && path.isNotEmpty) return Directory(path);
+    } catch (_) {}
+    return getApplicationSupportDirectory();
   }
 
   static Future<String> _defaultUpload(String path,

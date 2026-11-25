@@ -31,6 +31,8 @@ class UpdateBridge(private val activity: Activity, messenger: BinaryMessenger) {
                             ?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true)
                     }
                     "snapshot" -> { store.recover(); result.success(store.snapshot()) }
+                    // Pasta privada do app (usada pela fila de envio de monitoramentos).
+                    "filesDir" -> result.success(activity.filesDir.absolutePath)
                     "download" -> {
                         synchronized(UpdateStore.lock) {
                             require(!UpdateDownloadService.running && !UpdateInstaller.preparing && store.state != "installing")

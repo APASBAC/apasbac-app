@@ -2,7 +2,8 @@
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Logo do Socorro Bicho aparece inteira em todas as telas (antes saía cortada).",
-    "Atualização baixada pelo serviço de downloads do próprio Android, mais estável."
+    "Corrigido o erro ao enviar o relatório do monitoramento (\"Não foi possível preparar o envio\").",
+    "Mensagens de erro curtas e claras no envio.",
+    "Logo do Socorro Bicho inteira em todas as telas."
   ]
 }

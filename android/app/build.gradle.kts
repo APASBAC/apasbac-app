@@ -56,6 +56,8 @@ android {
 
     buildTypes {
         release {
+            // Regras extras do app (classes usadas só por JNI), somadas às do Flutter.
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = if (releaseKeystore != null) signingConfigs.getByName("production") else null
         }
     }
