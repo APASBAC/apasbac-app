@@ -2,8 +2,8 @@
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "O aplicativo agora se chama Socorro Bicho, com ícone novo: a logo da APASBAC com patinhas, corações e raios de sol.",
-    "Notificações com ícone de patinha.",
-    "Envio do monitoramento em segundo plano: toque em Enviar e pode sair do aplicativo."
+    "Atualização baixada pelo serviço de downloads do próprio Android, mais estável em redes lentas ou que caem.",
+    "Se o download falhar, o aplicativo tenta outro caminho e mostra o motivo exato do erro.",
+    "O aplicativo agora se chama Socorro Bicho, com ícone novo."
   ]
 }

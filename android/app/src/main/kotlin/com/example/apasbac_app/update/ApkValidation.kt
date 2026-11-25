@@ -4,7 +4,8 @@ import java.io.File
 import java.security.MessageDigest
 import java.util.zip.ZipFile
 
-class UpdateFailure(val reason: String) : Exception(reason)
+/** [detail] goes to the user-facing message so field failures can be diagnosed. */
+class UpdateFailure(val reason: String, val detail: String? = null) : Exception(reason)
 
 /** Pure validation rules, also exercised by JVM tests. No installer side effects. */
 object ApkValidation {
