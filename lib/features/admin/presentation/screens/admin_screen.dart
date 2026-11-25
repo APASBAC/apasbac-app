@@ -1,3 +1,4 @@
+import '../../../monitoring/presentation/widgets/delete_monitoring.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/utils/friendly_error.dart';
 import '../../../../core/widgets/apasbac_loading.dart';
@@ -207,6 +208,15 @@ class _MonitoringReviewCardState extends ConsumerState<_MonitoringReviewCard> {
                     ),
                   ),
                 ),
+                if (ref.watch(authProvider).valueOrNull?.isAdmin == true)
+                  IconButton(
+                    tooltip: 'Apagar monitoramento',
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.delete_outline_rounded),
+                    onPressed: _reviewing
+                        ? null
+                        : () => confirmAndDeleteMonitoring(context, ref, monitoring),
+                  ),
                 Chip(
                   label: Text(monitoring.statusLabel),
                   side: BorderSide(color: statusColor.withOpacity(0.35)),

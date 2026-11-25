@@ -27,6 +27,9 @@ class UserModel {
   /// Pode acessar /monitoring/mine (endpoint exclusivo para tutores)
   bool get isTutor => role == 'TUTOR';
 
+  /// Só o Admin pode apagar monitoramentos (regra da API).
+  bool get isAdmin => role == 'ADMIN';
+
   /// Admin ou Staff — acessa /monitoring (lista geral)
   bool get isAdminOrStaff => role == 'ADMIN' || role == 'STAFF';
 

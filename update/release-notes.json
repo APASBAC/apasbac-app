@@ -2,8 +2,7 @@
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Novo visualizador de fotos e vídeo do monitoramento em tela cheia: deslize para o lado, amplie com dois dedos ou toque duplo e arraste para baixo para fechar.",
-    "Vídeo com barra de progresso, tempo, som e tela cheia na horizontal; os controles somem sozinhos.",
-    "Vídeo em destaque com imagem de capa na tela do monitoramento."
+    "Administração: o Admin pode apagar um monitoramento (com as fotos e o vídeo) pela aba Validações ou pela tela do monitoramento, com confirmação.",
+    "Novo visualizador de fotos e vídeo do monitoramento em tela cheia."
   ]
 }

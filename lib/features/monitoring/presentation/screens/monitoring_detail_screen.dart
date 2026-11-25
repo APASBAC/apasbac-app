@@ -1,3 +1,4 @@
+import '../widgets/delete_monitoring.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/apasbac_loading.dart';
 import '../../../../core/theme/semantic_colors.dart';
@@ -27,9 +28,20 @@ class MonitoringDetailScreen extends ConsumerWidget {
         title: const Text('Monitoramento'),
         actions: [
           IconButton(
+            tooltip: 'Atualizar',
             icon: const Icon(Icons.refresh_rounded),
             onPressed: () => ref.invalidate(monitoringDetailProvider(id)),
           ),
+          if (user?.isAdmin == true && mAsync.hasValue)
+            IconButton(
+              tooltip: 'Apagar monitoramento',
+              icon: const Icon(Icons.delete_outline_rounded),
+              onPressed: () async {
+                final deleted =
+                    await confirmAndDeleteMonitoring(context, ref, mAsync.value!);
+                if (deleted && context.mounted) context.pop();
+              },
+            ),
         ],
       ),
       body: mAsync.when(

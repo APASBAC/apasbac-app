@@ -176,6 +176,11 @@ class MonitoringService {
     });
   }
 
+  /// ADMIN → DELETE /monitoring/:id (apaga também as fotos e o vídeo).
+  Future<void> deleteMonitoring(String monitoringId) async {
+    await api.delete('/monitoring/$monitoringId');
+  }
+
   Future<void> reviewMonitoring({
     required String monitoringId,
     required bool approved,
