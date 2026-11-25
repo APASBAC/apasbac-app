@@ -1,18 +1,17 @@
 {
   "schemaVersion": 1,
   "channel": "stable",
-  "versionCode": 13,
-  "versionName": "1.0.10-alpha",
+  "versionCode": 14,
+  "versionName": "1.0.11-alpha",
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Atualização baixada pelo serviço de downloads do próprio Android, mais estável em redes lentas ou que caem.",
-    "Se o download falhar, o aplicativo tenta outro caminho e mostra o motivo exato do erro.",
-    "O aplicativo agora se chama Socorro Bicho, com ícone novo."
+    "Logo do Socorro Bicho aparece inteira em todas as telas (antes saía cortada).",
+    "Atualização baixada pelo serviço de downloads do próprio Android, mais estável."
   ],
-  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.10-alpha/app-release.apk",
-  "sha256": "f112f0401f2388fc3258204d3020c7d8b7d806242473a342cef54ceb1f507fca",
-  "sizeBytes": 57369109,
-  "publishedAt": "2026-11-25T12:28:36Z",
+  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.11-alpha/app-release.apk",
+  "sha256": "1adc7cfd3b0fc13c957422f1f6e965f7594eb9aa744b052066f97e237df89b2b",
+  "sizeBytes": 57365517,
+  "publishedAt": "2026-11-25T12:56:05Z",
   "certificateSha256": "bd3062fd35e97bec46269c44e32e2daf32ad5a9a9afabe8054f5c1f83ce95578"
 }
