@@ -2,8 +2,7 @@
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Atualização baixada pelo serviço de downloads do próprio Android, mais estável em redes lentas ou que caem.",
-    "Se o download falhar, o aplicativo tenta outro caminho e mostra o motivo exato do erro.",
-    "O aplicativo agora se chama Socorro Bicho, com ícone novo."
+    "Logo do Socorro Bicho aparece inteira em todas as telas (antes saía cortada).",
+    "Atualização baixada pelo serviço de downloads do próprio Android, mais estável."
   ]
 }
