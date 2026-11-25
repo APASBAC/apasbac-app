@@ -26,6 +26,12 @@
         <service android:name=".update.UpdateDownloadService"
             android:exported="false" android:foregroundServiceType="dataSync"/>
         <receiver android:name=".update.InstallStatusReceiver" android:exported="false"/>
+        <!-- Envio do monitoramento em segundo plano (fotos e vídeo). -->
+        <service
+            android:name="com.dexterous.flutterlocalnotifications.ForegroundService"
+            android:exported="false"
+            android:stopWithTask="false"
+            android:foregroundServiceType="dataSync"/>
         <!-- Lembretes de monitoramento agendados (reagendados após reiniciar o celular). -->
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">

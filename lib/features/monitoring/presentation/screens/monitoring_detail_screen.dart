@@ -8,6 +8,7 @@ import '../../../../core/widgets/network_photo.dart';
 import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
 import '../../../../providers.dart';
+import '../widgets/upload_status_card.dart';
 import '../../../../core/models/monitoring_model.dart';
 
 class MonitoringDetailScreen extends ConsumerWidget {
@@ -18,6 +19,7 @@ class MonitoringDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mAsync = ref.watch(monitoringDetailProvider(id));
     final user = ref.watch(authProvider).valueOrNull;
+    final uploading = ref.watch(uploadQueueProvider).jobFor(id) != null;
 
     return Scaffold(
       appBar: AppBar(
@@ -35,7 +37,7 @@ class MonitoringDetailScreen extends ConsumerWidget {
         data: (m) => _MonitoringDetailView(monitoring: m),
       ),
       floatingActionButton: mAsync.whenOrNull(
-        data: (m) => user?.isTutor == true && m.canSubmit
+        data: (m) => user?.isTutor == true && m.canSubmit && !uploading
             ? FloatingActionButton.extended(
                 onPressed: () => context.push('/home/monitoring/$id/submit'),
                 icon: const Icon(Icons.upload_rounded),
@@ -62,6 +64,8 @@ class _MonitoringDetailView extends StatelessWidget {
         children: [
           // Banner de status
           _StatusBanner(monitoring: monitoring),
+          const SizedBox(height: 12),
+          UploadStatusCard(monitoringId: monitoring.id),
           const SizedBox(height: 20),
 
           // Info do animal
@@ -82,8 +86,8 @@ class _MonitoringDetailView extends StatelessWidget {
                             width: 56,
                             height: 56,
                             cacheWidth: 168,
-                            error: Icon(Icons.pets,
-                                color: cs.onPrimaryContainer),
+                            error:
+                                Icon(Icons.pets, color: cs.onPrimaryContainer),
                           ),
                         ),
                 ),
@@ -245,20 +249,20 @@ class _StatusBanner extends StatelessWidget {
   const _StatusBanner({required this.monitoring});
 
   Color get _color => switch (monitoring.status) {
-    'PENDING' => SemanticColors.pending,
-    'IN_REVIEW' => SemanticColors.review,
-    'APPROVED' => SemanticColors.approved,
-    'REJECTED' => SemanticColors.rejected,
-    _ => AppColors.muted,
-  };
+        'PENDING' => SemanticColors.pending,
+        'IN_REVIEW' => SemanticColors.review,
+        'APPROVED' => SemanticColors.approved,
+        'REJECTED' => SemanticColors.rejected,
+        _ => AppColors.muted,
+      };
 
   IconData get _icon => switch (monitoring.status) {
-    'PENDING' => Icons.hourglass_empty_rounded,
-    'IN_REVIEW' => Icons.manage_search_rounded,
-    'APPROVED' => Icons.check_circle_rounded,
-    'REJECTED' => Icons.cancel_rounded,
-    _ => Icons.help_rounded,
-  };
+        'PENDING' => Icons.hourglass_empty_rounded,
+        'IN_REVIEW' => Icons.manage_search_rounded,
+        'APPROVED' => Icons.check_circle_rounded,
+        'REJECTED' => Icons.cancel_rounded,
+        _ => Icons.help_rounded,
+      };
 
   @override
   Widget build(BuildContext context) {

@@ -2,9 +2,9 @@
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Opção \"Lembrar de mim\" no login: continue conectado ou saia ao fechar o aplicativo.",
-    "Sessão renovada automaticamente em segundo plano; se expirar, o app volta ao login com aviso.",
-    "Sair da conta encerra a sessão também no servidor.",
-    "Sem internet, o aplicativo abre com a última conta conectada."
+    "Envio do monitoramento em segundo plano: toque em Enviar e pode sair do aplicativo.",
+    "Notificação com o progresso do envio e aviso quando terminar.",
+    "Sem internet, o envio espera e continua sozinho; se o app for fechado, retoma ao abrir sem reenviar o que já subiu.",
+    "Vídeos grandes enviados sem pesar na memória do celular."
   ]
 }

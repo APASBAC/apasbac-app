@@ -13,9 +13,9 @@ class MonitoringService {
   final StorageService storage;
   final AnimalService animals;
   MonitoringService({Dio? api, StorageService? storage, AnimalService? animals})
-    : api = api ?? ApiClient().dio,
-      storage = storage ?? StorageService(),
-      animals = animals ?? AnimalService(api: api);
+      : api = api ?? ApiClient().dio,
+        storage = storage ?? StorageService(),
+        animals = animals ?? AnimalService(api: api);
 
   /// A API de monitoramento devolve o animal só com id, nome, espécie e raça
   /// (sem sexo, porte e fotos). Busca o cadastro completo de cada animal
@@ -51,8 +51,8 @@ class MonitoringService {
 
   /// TUTOR → todos os monitoramentos próprios (todas as páginas)
   Future<List<MonitoringModel>> getAllMyMonitorings() async {
-    final items = await fetchAllPages((page, limit) async =>
-        _parseList((await api.get('/monitoring/mine',
+    final items = await fetchAllPages((page, limit) async => _parseList(
+        (await api.get('/monitoring/mine',
                 queryParameters: {'page': page, 'limit': limit}))
             .data));
     return _withAnimals(items);
@@ -60,8 +60,8 @@ class MonitoringService {
 
   /// ADMIN/STAFF → todos os monitoramentos (todas as páginas)
   Future<List<MonitoringModel>> getEveryMonitoring() async {
-    final items = await fetchAllPages((page, limit) async =>
-        _parseList((await api.get('/monitoring',
+    final items = await fetchAllPages((page, limit) async => _parseList(
+        (await api.get('/monitoring',
                 queryParameters: {'page': page, 'limit': limit}))
             .data));
     return _withAnimals(items, bulk: true);
@@ -162,6 +162,18 @@ class MonitoringService {
       '/monitoring/$monitoringId/submit',
       data: {'videoUrl': videoUrl, 'imageUrls': urls},
     );
+  }
+
+  /// Última etapa do envio: registra na API as URLs já enviadas ao storage.
+  Future<void> finishSubmit({
+    required String monitoringId,
+    required String videoUrl,
+    required List<String> imageUrls,
+  }) async {
+    await api.post('/monitoring/$monitoringId/submit', data: {
+      'videoUrl': videoUrl,
+      'imageUrls': imageUrls,
+    });
   }
 
   Future<void> reviewMonitoring({

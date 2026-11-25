@@ -7,6 +7,7 @@ import '../core/services/auth_service.dart';
 import '../core/services/animal_service.dart';
 import '../core/services/monitoring_service.dart';
 import '../core/services/user_service.dart';
+import '../core/services/monitoring_upload_queue.dart';
 
 // ─── Services ───────────────────────────────────────────────
 final authServiceProvider = Provider<AuthService>((_) => AuthService());
@@ -14,6 +15,10 @@ final animalServiceProvider = Provider<AnimalService>((_) => AnimalService());
 final monitoringServiceProvider =
     Provider<MonitoringService>((_) => MonitoringService());
 final userServiceProvider = Provider<UserService>((_) => UserService());
+
+/// Fila de envio dos monitoramentos em segundo plano.
+final uploadQueueProvider = ChangeNotifierProvider<MonitoringUploadQueue>(
+    (_) => MonitoringUploadQueue.instance);
 
 // ─── Auth State ─────────────────────────────────────────────
 
@@ -99,6 +104,8 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
   }
 
   Future<void> logout() async {
+    // Envios pendentes pertencem a quem está saindo da conta.
+    await ref.read(uploadQueueProvider).clearAll();
     await ref.read(authServiceProvider).logout();
     state = const AsyncData(null);
   }

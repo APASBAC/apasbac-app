@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../providers.dart';
 import '../../../../core/models/monitoring_model.dart';
+import '../../../../core/services/monitoring_upload_queue.dart';
 
 class MonitoringListScreen extends ConsumerWidget {
   const MonitoringListScreen({super.key});
@@ -176,15 +177,26 @@ class _MonitoringList extends ConsumerWidget {
 
 // ── Card de monitoramento ─────────────────────────────────────
 
-class _MonitoringCard extends StatelessWidget {
+class _MonitoringCard extends ConsumerWidget {
   final MonitoringModel monitoring;
   final bool canSubmit;
   const _MonitoringCard({required this.monitoring, required this.canSubmit});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
-    final statusColor = _statusColor(monitoring.status);
+    final job = ref.watch(uploadQueueProvider).jobFor(monitoring.id);
+    final uploadFailed = job?.status == UploadStatus.failed;
+    final statusColor = job == null
+        ? _statusColor(monitoring.status)
+        : uploadFailed
+            ? SemanticColors.rejected
+            : SemanticColors.review;
+    final statusLabel = job == null
+        ? monitoring.statusLabel
+        : uploadFailed
+            ? 'Falha no envio'
+            : 'Enviando ${(job.progress * 100).floor()}%';
 
     return Card(
       child: InkWell(
@@ -244,7 +256,7 @@ class _MonitoringCard extends StatelessWidget {
                       border: Border.all(color: statusColor.withOpacity(0.4)),
                     ),
                     child: Text(
-                      monitoring.statusLabel,
+                      statusLabel,
                       style: TextStyle(
                         fontSize: 11,
                         color: statusColor,
@@ -282,7 +294,7 @@ class _MonitoringCard extends StatelessWidget {
                     ),
                   ],
                   const Spacer(),
-                  if (canSubmit)
+                  if (canSubmit && job == null)
                     TextButton.icon(
                       onPressed: () => context.push(
                         '/home/monitoring/${monitoring.id}/submit',
@@ -307,18 +319,18 @@ class _MonitoringCard extends StatelessWidget {
   }
 
   Color _statusColor(String status) => switch (status) {
-    'PENDING' => SemanticColors.pending,
-    'IN_REVIEW' => SemanticColors.review,
-    'APPROVED' => SemanticColors.approved,
-    'REJECTED' => SemanticColors.rejected,
-    _ => AppColors.muted,
-  };
+        'PENDING' => SemanticColors.pending,
+        'IN_REVIEW' => SemanticColors.review,
+        'APPROVED' => SemanticColors.approved,
+        'REJECTED' => SemanticColors.rejected,
+        _ => AppColors.muted,
+      };
 
   IconData _statusIcon(String status) => switch (status) {
-    'PENDING' => Icons.hourglass_empty_rounded,
-    'IN_REVIEW' => Icons.manage_search_rounded,
-    'APPROVED' => Icons.check_circle_outline_rounded,
-    'REJECTED' => Icons.cancel_outlined,
-    _ => Icons.help_outline_rounded,
-  };
+        'PENDING' => Icons.hourglass_empty_rounded,
+        'IN_REVIEW' => Icons.manage_search_rounded,
+        'APPROVED' => Icons.check_circle_outline_rounded,
+        'REJECTED' => Icons.cancel_outlined,
+        _ => Icons.help_outline_rounded,
+      };
 }

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 import '../../../../providers.dart';
+import '../widgets/upload_status_card.dart';
 
 class MonitoringSubmitScreen extends ConsumerStatefulWidget {
   final String monitoringId;
@@ -23,7 +24,6 @@ class _MonitoringSubmitScreenState
   final List<XFile> _images = [];
   bool _loading = false;
   String? _error;
-  double _uploadProgress = 0;
 
   static const int _maxImages = 5;
 
@@ -83,27 +83,43 @@ class _MonitoringSubmitScreenState
     setState(() {
       _loading = true;
       _error = null;
-      _uploadProgress = 0;
     });
 
     try {
-      await ref.read(monitoringServiceProvider).submitMonitoring(
+      // Confere se o monitoramento ainda aceita envio. Sem internet, o envio
+      // entra na fila mesmo assim e começa quando a conexão voltar.
+      try {
+        final current = await ref
+            .read(monitoringServiceProvider)
+            .getMonitoringById(widget.monitoringId, withAnimal: false);
+        if (!current.canSubmit) {
+          if (mounted) {
+            setState(
+                () => _error = 'Este monitoramento não aceita mais envios.');
+          }
+          return;
+        }
+      } on DioException catch (e) {
+        if (e.response != null && e.response!.statusCode! < 500) rethrow;
+      }
+
+      final animal = ref
+          .read(monitoringDetailProvider(widget.monitoringId))
+          .valueOrNull
+          ?.animal
+          ?.name;
+      await ref.read(uploadQueueProvider).enqueue(
             monitoringId: widget.monitoringId,
+            animalName: animal ?? '',
             video: _video!,
-            images: _images,
-            onProgress: (value) {
-              if (mounted) setState(() => _uploadProgress = value);
-            },
+            images: List.of(_images),
           );
 
       if (mounted) {
-        // Invalida o cache para recarregar o detalhe
-        ref.invalidate(monitoringDetailProvider(widget.monitoringId));
-        ref.invalidate(myMonitoringsProvider);
-
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Relatório enviado com sucesso!'),
+            content: Text(
+                'Enviando em segundo plano. Pode sair do app: avisamos quando terminar.'),
             backgroundColor: SemanticColors.approved,
           ),
         );
@@ -111,21 +127,17 @@ class _MonitoringSubmitScreenState
       }
     } on DioException catch (e) {
       final data = e.response?.data;
-      String msg;
-      if (data is Map) {
-        final raw = data['message'] ?? 'Erro ao enviar';
-        msg = raw is List ? raw.join(', ') : raw.toString();
-      } else if (data is String && data.isNotEmpty) {
-        final status = e.response?.statusCode;
-        msg = status == 503
-            ? 'Serviço temporariamente indisponível. Tente novamente em instantes.'
-            : 'Erro ${status ?? ""}: verifique sua conexão e tente novamente.';
-      } else {
-        msg = 'Erro ao enviar. Tente novamente.';
-      }
+      final raw = data is Map ? data['message'] : null;
+      final msg = raw is List
+          ? raw.join(', ')
+          : (raw?.toString() ?? 'Erro ao preparar o envio. Tente novamente.');
       if (mounted) setState(() => _error = msg);
     } catch (e) {
-      if (mounted) setState(() => _error = 'Erro inesperado: ${e.toString()}');
+      if (mounted) {
+        setState(() => _error = e is StateError
+            ? e.message
+            : 'Não foi possível preparar o envio: $e');
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -138,6 +150,15 @@ class _MonitoringSubmitScreenState
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final job = ref.watch(uploadQueueProvider).jobFor(widget.monitoringId);
+    if (job != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Enviar relatório')),
+        body: ListView(padding: const EdgeInsets.all(20), children: [
+          UploadStatusCard(monitoringId: widget.monitoringId),
+        ]),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Enviar relatório')),
@@ -280,9 +301,7 @@ class _MonitoringSubmitScreenState
                       )
                     : const Icon(Icons.send_rounded),
                 label: Text(
-                  _loading
-                      ? 'Enviando ${(_uploadProgress * 100).round()}%'
-                      : 'Enviar relatório',
+                  _loading ? 'Preparando envio…' : 'Enviar relatório',
                   style: const TextStyle(fontSize: 16),
                 ),
               ),

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import '../api/api_client.dart';
@@ -32,8 +34,12 @@ class StorageService {
     final fields = Map<String, dynamic>.from(signature['form_fields'] as Map);
     final form = FormData.fromMap({
       for (final field in fields.entries) field.key: field.value.toString(),
-      'file': MultipartFile.fromBytes(await file.readAsBytes(),
-          filename: file.name),
+      // Arquivo em disco (vídeo de vários MB) é enviado em fluxo, sem carregar
+      // tudo na memória; dados em memória (testes, web) vão como bytes.
+      'file': file.path.isNotEmpty && File(file.path).existsSync()
+          ? await MultipartFile.fromFile(file.path, filename: file.name)
+          : MultipartFile.fromBytes(await file.readAsBytes(),
+              filename: file.name),
     });
     final uploaded =
         await cloudinary.postUri(uri, data: form, onSendProgress: onProgress);
