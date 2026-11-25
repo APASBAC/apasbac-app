@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "channel": "stable",
-  "versionCode": 12,
-  "versionName": "1.0.9-alpha",
+  "versionCode": 13,
+  "versionName": "1.0.10-alpha",
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "O aplicativo agora se chama Socorro Bicho, com ícone novo: a logo da APASBAC com patinhas, corações e raios de sol.",
-    "Notificações com ícone de patinha.",
-    "Envio do monitoramento em segundo plano: toque em Enviar e pode sair do aplicativo."
+    "Atualização baixada pelo serviço de downloads do próprio Android, mais estável em redes lentas ou que caem.",
+    "Se o download falhar, o aplicativo tenta outro caminho e mostra o motivo exato do erro.",
+    "O aplicativo agora se chama Socorro Bicho, com ícone novo."
   ],
-  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.9-alpha/app-release.apk",
-  "sha256": "d3e5be14479a9c587548d39a4f3b082e95449cda0b9a26583e80644f4a88b924",
-  "sizeBytes": 57369085,
-  "publishedAt": "2026-11-25T12:21:41Z",
+  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.10-alpha/app-release.apk",
+  "sha256": "f112f0401f2388fc3258204d3020c7d8b7d806242473a342cef54ceb1f507fca",
+  "sizeBytes": 57369109,
+  "publishedAt": "2026-11-25T12:28:36Z",
   "certificateSha256": "bd3062fd35e97bec46269c44e32e2daf32ad5a9a9afabe8054f5c1f83ce95578"
 }
