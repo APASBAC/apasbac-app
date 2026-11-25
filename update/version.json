@@ -1,19 +1,18 @@
 {
   "schemaVersion": 1,
   "channel": "stable",
-  "versionCode": 11,
-  "versionName": "1.0.8-beta",
+  "versionCode": 12,
+  "versionName": "1.0.9-alpha",
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Envio do monitoramento em segundo plano: toque em Enviar e pode sair do aplicativo.",
-    "Notificação com o progresso do envio e aviso quando terminar.",
-    "Sem internet, o envio espera e continua sozinho; se o app for fechado, retoma ao abrir sem reenviar o que já subiu.",
-    "Vídeos grandes enviados sem pesar na memória do celular."
+    "O aplicativo agora se chama Socorro Bicho, com ícone novo: a logo da APASBAC com patinhas, corações e raios de sol.",
+    "Notificações com ícone de patinha.",
+    "Envio do monitoramento em segundo plano: toque em Enviar e pode sair do aplicativo."
   ],
-  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.8-beta/app-release.apk",
-  "sha256": "96283577f6adc18369abdc8984ebb1425c17734e1362dc392aba4221c10dc34c",
-  "sizeBytes": 57077765,
-  "publishedAt": "2026-11-25T11:52:07Z",
+  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.9-alpha/app-release.apk",
+  "sha256": "d3e5be14479a9c587548d39a4f3b082e95449cda0b9a26583e80644f4a88b924",
+  "sizeBytes": 57369085,
+  "publishedAt": "2026-11-25T12:21:41Z",
   "certificateSha256": "bd3062fd35e97bec46269c44e32e2daf32ad5a9a9afabe8054f5c1f83ce95578"
 }
