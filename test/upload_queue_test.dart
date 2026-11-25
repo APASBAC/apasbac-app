@@ -127,7 +127,7 @@ void main() {
     await settle(q);
     final job = q.jobFor('m1')!;
     expect(job.status, UploadStatus.failed);
-    expect(job.error, 'Este monitoramento já foi enviado');
+    expect(job.error, contains('Este monitoramento já foi enviado'));
     expect(notes.events, contains('failed'));
     reject = false;
     await q.retry('m1');

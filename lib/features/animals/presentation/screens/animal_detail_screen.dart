@@ -1,3 +1,4 @@
+import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/apasbac_loading.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +20,9 @@ class AnimalDetailScreen extends ConsumerWidget {
         loading: () => const ApasbacLoading(),
         error: (err, _) => Scaffold(
           appBar: AppBar(),
-          body: Center(child: Text('Erro: $err')),
+          body: ErrorState(
+              error: err,
+              onRetry: () => ref.invalidate(animalDetailProvider(id))),
         ),
         data: (animal) => _AnimalDetailView(animal: animal),
       ),
@@ -117,7 +120,9 @@ class _AnimalDetailViewState extends State<_AnimalDetailView> {
                       Expanded(
                         child: Text(
                           animal.name,
-                          style: Theme.of(context).textTheme.headlineMedium
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ),

@@ -1,3 +1,4 @@
+import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/apasbac_loading.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -21,8 +22,8 @@ class MyAnimalsScreen extends ConsumerWidget {
       ),
       body: animalsAsync.when(
         loading: () => const ApasbacLoading(),
-        error: (err, _) => _ErrorView(
-          message: err.toString(),
+        error: (err, _) => ErrorState(
+          error: err,
           onRetry: () => ref.invalidate(myAnimalsProvider),
         ),
         data: (animals) {
@@ -175,35 +176,6 @@ class _EmptyView extends StatelessWidget {
             style: TextStyle(fontSize: 16, color: AppColors.muted),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-
-  const _ErrorView({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 60, color: AppColors.red),
-            const SizedBox(height: 16),
-            Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: onRetry,
-              child: const Text('Tentar novamente'),
-            ),
-          ],
-        ),
       ),
     );
   }

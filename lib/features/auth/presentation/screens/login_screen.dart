@@ -1,10 +1,10 @@
+import '../../../../core/utils/friendly_error.dart';
 import '../../../../core/widgets/app_content.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/apasbac_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:dio/dio.dart';
 import '../../../../providers.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -66,11 +66,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         setState(() => _error = error);
       }
       // Navegação é feita automaticamente pelo router ao detectar usuário logado
-    } on DioException catch (e) {
-      final msg = e.response?.data?['message'] ?? 'Credenciais inválidas';
-      setState(() => _error = msg is List ? msg.first : msg.toString());
     } catch (e) {
-      setState(() => _error = 'Erro inesperado. Tente novamente.');
+      if (mounted) setState(() => _error = friendlyMessage(e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

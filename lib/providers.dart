@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../core/utils/friendly_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/models/user_model.dart';
 import '../core/models/animal_model.dart';
@@ -26,16 +27,8 @@ final uploadQueueProvider = ChangeNotifierProvider<MonitoringUploadQueue>(
 final authNoticeProvider = StateProvider<String?>((_) => null);
 
 String _apiMessage(Object e, String fallback) {
-  if (e is DioException) {
-    final data = e.response?.data;
-    final msg = data is Map ? data['message'] : null;
-    if (msg is List && msg.isNotEmpty) return msg.join('\n');
-    if (msg is String && msg.isNotEmpty) return msg;
-    if (e.response == null) {
-      return 'Sem conexão com o servidor. Verifique sua internet.';
-    }
-  }
-  return fallback;
+  final f = describeError(e);
+  return f.kind == ErrorKind.unknown ? fallback : f.text;
 }
 
 class AuthNotifier extends AsyncNotifier<UserModel?> {
@@ -72,8 +65,11 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
       return null;
     } catch (e) {
       state = const AsyncData(null);
-      final msg = _apiMessage(e, 'E-mail ou senha incorretos.');
-      return msg == 'Unauthorized' ? 'E-mail ou senha incorretos.' : msg;
+      // No login, 401 significa e-mail ou senha errados (não sessão expirada).
+      if (e is DioException && e.response?.statusCode == 401) {
+        return 'E-mail ou senha incorretos.';
+      }
+      return _apiMessage(e, 'Não foi possível entrar. Tente de novo.');
     }
   }
 

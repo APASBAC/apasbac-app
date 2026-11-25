@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/friendly_error.dart';
 import 'monitoring_service.dart';
 import 'storage_service.dart';
 
@@ -295,20 +296,7 @@ class MonitoringUploadQueue extends ChangeNotifier {
           e.response!.statusCode == 408 ||
           e.response!.statusCode == 429);
 
-  static String _message(Object e) {
-    if (e is DioException) {
-      final data = e.response?.data;
-      final msg = data is Map ? data['message'] : null;
-      if (msg is List && msg.isNotEmpty) return msg.join(', ');
-      if (msg is String && msg.isNotEmpty) return msg;
-      if (e.response == null) return 'Sem conexão com a internet.';
-      return 'Erro ${e.response!.statusCode} ao enviar.';
-    }
-    if (e is FileSystemException) {
-      return 'Os arquivos deste envio não estão mais no aparelho. Selecione-os novamente.';
-    }
-    return 'Não foi possível enviar.';
-  }
+  static String _message(Object e) => describeError(e).text;
 
   Future<void> _process() async {
     if (_running || !_enabled) return;

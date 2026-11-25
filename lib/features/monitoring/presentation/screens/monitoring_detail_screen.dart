@@ -1,3 +1,4 @@
+import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/apasbac_loading.dart';
 import '../../../../core/theme/semantic_colors.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -33,7 +34,9 @@ class MonitoringDetailScreen extends ConsumerWidget {
       ),
       body: mAsync.when(
         loading: () => const ApasbacLoading(),
-        error: (err, _) => Center(child: Text('Erro: $err')),
+        error: (err, _) => ErrorState(
+            error: err,
+            onRetry: () => ref.invalidate(monitoringDetailProvider(id))),
         data: (m) => _MonitoringDetailView(monitoring: m),
       ),
       floatingActionButton: mAsync.whenOrNull(

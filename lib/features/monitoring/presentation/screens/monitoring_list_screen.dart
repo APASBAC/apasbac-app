@@ -1,3 +1,4 @@
+import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/apasbac_loading.dart';
 import '../../../../core/theme/semantic_colors.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -22,7 +23,7 @@ class MonitoringListScreen extends ConsumerWidget {
       ),
       body: userAsync.when(
         loading: () => const ApasbacLoading(),
-        error: (_, __) => const Center(child: Text('Erro ao carregar usuário')),
+        error: (err, _) => ErrorState(error: err),
         data: (user) {
           // Usuário não é tutor — exibe aviso sem fazer request
           if (user == null || !user.canAccessMonitoring) {
@@ -120,23 +121,9 @@ class _MonitoringList extends ConsumerWidget {
 
     return monitoringsAsync.when(
       loading: () => const ApasbacLoading(),
-      error: (err, _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 60, color: AppColors.red),
-              const SizedBox(height: 16),
-              Text(err.toString(), textAlign: TextAlign.center),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => ref.invalidate(myMonitoringsProvider),
-                child: const Text('Tentar novamente'),
-              ),
-            ],
-          ),
-        ),
+      error: (err, _) => ErrorState(
+        error: err,
+        onRetry: () => ref.invalidate(myMonitoringsProvider),
       ),
       data: (monitorings) {
         if (monitorings.isEmpty) {

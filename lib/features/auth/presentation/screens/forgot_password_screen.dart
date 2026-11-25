@@ -1,8 +1,8 @@
+import '../../../../core/utils/friendly_error.dart';
 import '../../../../core/widgets/app_content.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
 import '../../../../providers.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -37,9 +37,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           .read(authServiceProvider)
           .forgotPassword(_emailCtrl.text.trim());
       setState(() => _sent = true);
-    } on DioException catch (e) {
-      final msg = e.response?.data?['message'] ?? 'Erro ao enviar e-mail';
-      setState(() => _error = msg.toString());
+    } catch (e) {
+      if (mounted) setState(() => _error = friendlyMessage(e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

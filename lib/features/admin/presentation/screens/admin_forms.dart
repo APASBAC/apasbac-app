@@ -1,3 +1,4 @@
+import '../../../../core/utils/friendly_error.dart';
 import '../../../../core/widgets/apasbac_loading.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/models/animal_model.dart';
@@ -241,8 +242,8 @@ class _ConfigDialogState extends State<_ConfigDialog> {
                           if (context.mounted) Navigator.pop(context, true);
                         } catch (e) {
                           if (mounted) {
-                            setState(
-                                () => error = 'Não foi possível salvar: $e');
+                            setState(() => error =
+                                'Não foi possível salvar. ${friendlyMessage(e)}');
                           }
                         } finally {
                           if (mounted) setState(() => saving = false);
@@ -387,7 +388,7 @@ class _AnimalCreateState extends ConsumerState<AnimalCreateScreen> {
                           } catch (e) {
                             if (mounted) {
                               setState(() => error =
-                                  'Não foi possível selecionar fotos: $e');
+                                  'Não foi possível selecionar as fotos. ${friendlyMessage(e)}');
                             }
                           }
                         }),
@@ -438,7 +439,9 @@ class _AnimalCreateState extends ConsumerState<AnimalCreateScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
-      if (mounted) setState(() => error = 'Não foi possível cadastrar: $e');
+      if (mounted)
+        setState(
+            () => error = 'Não foi possível cadastrar. ${friendlyMessage(e)}');
     } finally {
       if (mounted) setState(() => saving = false);
     }
@@ -563,8 +566,8 @@ class _MonitoringCreateState extends ConsumerState<MonitoringCreateScreen> {
                                 }
                               } catch (e) {
                                 if (mounted) {
-                                  setState(() =>
-                                      error = 'Não foi possível criar: $e');
+                                  setState(() => error =
+                                      'Não foi possível criar. ${friendlyMessage(e)}');
                                 }
                               } finally {
                                 if (mounted) setState(() => saving = false);

@@ -1,3 +1,5 @@
+import '../../../../core/widgets/error_state.dart';
+import '../../../../core/utils/friendly_error.dart';
 import '../../../../core/widgets/apasbac_loading.dart';
 import '../../../../core/theme/semantic_colors.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -126,7 +128,7 @@ class _MonitoringReviewTabState extends ConsumerState<_MonitoringReviewTab> {
           child: monitoringsAsync.when(
             loading: () => const ApasbacLoading(),
             error: (err, _) => _ErrorView(
-              message: err.toString(),
+              error: err,
               onRetry: () => ref.invalidate(myMonitoringsProvider),
             ),
             data: (all) {
@@ -151,8 +153,7 @@ class _MonitoringReviewTabState extends ConsumerState<_MonitoringReviewTab> {
                     : ListView.separated(
                         padding: const EdgeInsets.all(16),
                         itemCount: monitorings.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 12),
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
                         itemBuilder: (_, i) => _MonitoringReviewCard(
                           key: ValueKey(monitorings[i].id),
                           monitoring: monitorings[i],
@@ -292,7 +293,8 @@ class _MonitoringReviewCardState extends ConsumerState<_MonitoringReviewCard> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao revisar: $e')),
+          SnackBar(
+              content: Text('Não foi possível revisar. ${friendlyMessage(e)}')),
         );
       }
     } finally {
@@ -331,7 +333,7 @@ class _AnimalsTabState extends ConsumerState<_AnimalsTab> {
           child: animalsAsync.when(
             loading: () => const ApasbacLoading(),
             error: (err, _) => _ErrorView(
-              message: err.toString(),
+              error: err,
               onRetry: () => ref.invalidate(adminAnimalsProvider),
             ),
             data: (all) {
@@ -359,8 +361,7 @@ class _AnimalsTabState extends ConsumerState<_AnimalsTab> {
                     : ListView.separated(
                         padding: const EdgeInsets.all(16),
                         itemCount: animals.length + 1,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 12),
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
                         itemBuilder: (_, i) => i == 0
                             ? Text(
                                 '${animals.length} de ${all.length} animais',
@@ -497,7 +498,7 @@ class _AdoptionsTabState extends ConsumerState<_AdoptionsTab> {
     return animalsAsync.when(
       loading: () => const ApasbacLoading(),
       error: (err, _) => _ErrorView(
-        message: err.toString(),
+        error: err,
         onRetry: () => ref.invalidate(adminAnimalsProvider),
       ),
       data: (animals) {
@@ -507,14 +508,14 @@ class _AdoptionsTabState extends ConsumerState<_AdoptionsTab> {
               message: 'Nenhum animal disponível para adoção');
         }
         final shown = availableAnimals
-            .where((a) => matchesSearch(
-                _query, [a.name, a.breed, a.species, '#${a.id}']))
+            .where((a) =>
+                matchesSearch(_query, [a.name, a.breed, a.species, '#${a.id}']))
             .toList();
 
         return usersAsync.when(
           loading: () => const ApasbacLoading(),
           error: (err, _) => _ErrorView(
-            message: err.toString(),
+            error: err,
             onRetry: () => ref.invalidate(adminUsersProvider),
           ),
           data: (users) => Column(
@@ -622,7 +623,9 @@ class _AdoptionCard extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao vincular adoção: $e')),
+          SnackBar(
+              content: Text(
+                  'Não foi possível vincular a adoção. ${friendlyMessage(e)}')),
         );
       }
     }
@@ -662,7 +665,7 @@ class _UsersTabState extends ConsumerState<_UsersTab> {
           child: usersAsync.when(
             loading: () => const ApasbacLoading(),
             error: (err, _) => _ErrorView(
-              message: err.toString(),
+              error: err,
               onRetry: () => ref.invalidate(adminUsersProvider),
             ),
             data: (all) {
@@ -680,8 +683,7 @@ class _UsersTabState extends ConsumerState<_UsersTab> {
                     : ListView.separated(
                         padding: const EdgeInsets.all(16),
                         itemCount: users.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 12),
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
                         itemBuilder: (_, i) => _UserRoleTile(
                             key: ValueKey(users[i].id), user: users[i]),
                       ),
@@ -745,7 +747,9 @@ class _UserRoleTile extends ConsumerWidget {
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Erro ao mudar cargo: $e')),
+                        SnackBar(
+                            content: Text(
+                                'Não foi possível mudar o cargo. ${friendlyMessage(e)}')),
                       );
                     }
                   }
@@ -781,8 +785,8 @@ class _UserPickerState extends State<_UserPicker> {
       minChildSize: 0.5,
       maxChildSize: 0.95,
       builder: (context, scrollController) => Padding(
-        padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding:
+            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: Column(
           children: [
             Padding(
@@ -859,35 +863,17 @@ Future<String?> _askNotes(BuildContext context, bool approved) async {
 }
 
 class _ErrorView extends StatelessWidget {
-  final String message;
+  final Object error;
   final VoidCallback onRetry;
 
   const _ErrorView({
-    required this.message,
+    required this.error,
     required this.onRetry,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: AppColors.red),
-            const SizedBox(height: 12),
-            Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: onRetry,
-              child: const Text('Tentar novamente'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      ErrorState(error: error, onRetry: onRetry);
 }
 
 class _EmptyView extends StatelessWidget {

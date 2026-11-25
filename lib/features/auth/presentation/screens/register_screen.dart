@@ -1,8 +1,8 @@
+import '../../../../core/utils/friendly_error.dart';
 import '../../../../core/widgets/app_content.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
 import '../../../../providers.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -51,11 +51,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             confirmPassword: _confirmCtrl.text,
           );
       if (error != null && mounted) setState(() => _error = error);
-    } on DioException catch (e) {
-      final msg = e.response?.data?['message'] ?? 'Erro ao cadastrar';
-      setState(() => _error = msg is List ? msg.join(', ') : msg.toString());
     } catch (e) {
-      setState(() => _error = 'Erro inesperado. Tente novamente.');
+      if (mounted) setState(() => _error = friendlyMessage(e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

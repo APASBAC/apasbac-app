@@ -2,8 +2,8 @@
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Corrigido o erro ao enviar o relatório do monitoramento (\"Não foi possível preparar o envio\").",
-    "Mensagens de erro curtas e claras no envio.",
-    "Logo do Socorro Bicho inteira em todas as telas."
+    "Mensagens de erro claras: sem internet, conexão lenta, servidor fora do ar, sessão expirada e outros, com o que fazer em cada caso.",
+    "Telas de erro com ícone e botão para tentar de novo.",
+    "Envio do relatório do monitoramento corrigido."
   ]
 }

@@ -1,3 +1,4 @@
+import '../../../../core/utils/friendly_error.dart';
 import '../../../../core/theme/semantic_colors.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -125,21 +126,11 @@ class _MonitoringSubmitScreenState
         );
         context.pop();
       }
-    } on DioException catch (e) {
-      final data = e.response?.data;
-      final raw = data is Map ? data['message'] : null;
-      final msg = raw is List
-          ? raw.join(', ')
-          : (raw?.toString() ?? 'Erro ao preparar o envio. Tente novamente.');
-      if (mounted) setState(() => _error = msg);
     } catch (e) {
       if (mounted) {
-        debugPrint('[Envio] falha ao preparar: $e');
-        final first = e.toString().split('\n').first;
         setState(() => _error = e is StateError
             ? e.message
-            : 'Não foi possível preparar o envio. Tente novamente.\n'
-                '(${first.length > 120 ? '${first.substring(0, 120)}…' : first})');
+            : 'Não foi possível preparar o envio. ${friendlyMessage(e)}');
       }
     } finally {
       if (mounted) setState(() => _loading = false);

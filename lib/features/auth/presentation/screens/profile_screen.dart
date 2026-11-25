@@ -1,3 +1,4 @@
+import '../../../../core/utils/friendly_error.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/user_model.dart';
@@ -59,10 +60,11 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
           .updateLocalProfile(fullName: fullName, phone: phone);
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Perfil atualizado.')));
-    } catch (_) {
-      if (mounted)
-        setState(() => _error =
-            'Não foi possível salvar. Confira sua conexão e tente novamente.');
+    } catch (e) {
+      if (mounted) {
+        setState(
+            () => _error = 'Não foi possível salvar. ${friendlyMessage(e)}');
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -77,10 +79,11 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
     try {
       await ref.read(authServiceProvider).forgotPassword(widget.user.email);
       if (mounted) setState(() => _sent = true);
-    } catch (_) {
-      if (mounted)
+    } catch (e) {
+      if (mounted) {
         setState(() =>
-            _error = 'Não foi possível enviar o e-mail. Tente novamente.');
+            _error = 'Não foi possível enviar o e-mail. ${friendlyMessage(e)}');
+      }
     } finally {
       if (mounted) setState(() => _sending = false);
     }
