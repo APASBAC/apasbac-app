@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "stable",
-  "versionCode": 10,
-  "versionName": "1.0.7-beta",
+  "versionCode": 11,
+  "versionName": "1.0.8-beta",
   "minimumSupportedVersionCode": 1,
   "mandatory": false,
   "releaseNotes": [
-    "Opção \"Lembrar de mim\" no login: continue conectado ou saia ao fechar o aplicativo.",
-    "Sessão renovada automaticamente em segundo plano; se expirar, o app volta ao login com aviso.",
-    "Sair da conta encerra a sessão também no servidor.",
-    "Sem internet, o aplicativo abre com a última conta conectada."
+    "Envio do monitoramento em segundo plano: toque em Enviar e pode sair do aplicativo.",
+    "Notificação com o progresso do envio e aviso quando terminar.",
+    "Sem internet, o envio espera e continua sozinho; se o app for fechado, retoma ao abrir sem reenviar o que já subiu.",
+    "Vídeos grandes enviados sem pesar na memória do celular."
   ],
-  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.7-beta/app-release.apk",
-  "sha256": "9311d3f148c246fef903f102c6cdd3c21b5fbedd2d997b09d09e9575ccb84315",
-  "sizeBytes": 56831441,
-  "publishedAt": "2026-11-17T14:53:04Z",
+  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.8-beta/app-release.apk",
+  "sha256": "96283577f6adc18369abdc8984ebb1425c17734e1362dc392aba4221c10dc34c",
+  "sizeBytes": 57077765,
+  "publishedAt": "2026-11-25T11:52:07Z",
   "certificateSha256": "bd3062fd35e97bec46269c44e32e2daf32ad5a9a9afabe8054f5c1f83ce95578"
 }
