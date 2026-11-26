@@ -1,17 +1,18 @@
 {
   "schemaVersion": 1,
   "channel": "stable",
-  "versionCode": 18,
-  "versionName": "1.0.15-alpha",
-  "minimumSupportedVersionCode": 1,
+  "versionCode": 19,
+  "versionName": "1.0.16-alpha",
+  "minimumSupportedVersionCode": 19,
   "mandatory": false,
   "releaseNotes": [
-    "Administração: o Admin pode apagar um monitoramento (com as fotos e o vídeo) pela aba Validações ou pela tela do monitoramento, com confirmação.",
-    "Novo visualizador de fotos e vídeo do monitoramento em tela cheia."
+    "Monitoramento: fotos e vídeo agora só podem ser gravados pela câmera do aplicativo (a galeria foi removida).",
+    "Cada foto e vídeo é assinado no momento da gravação; a APASBAC só aceita mídias gravadas pelo app.",
+    "Esta atualização é obrigatória para enviar novos monitoramentos."
   ],
-  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.15-alpha/app-release.apk",
-  "sha256": "72b3bcbd76f747b09c14a1ad51b457ba59c5bf577a0bad9ae5e512ebf36be1e7",
-  "sizeBytes": 57710713,
-  "publishedAt": "2026-11-25T16:54:41Z",
+  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.16-alpha/app-release.apk",
+  "sha256": "5a17f53eeb6fecbb9830f687b89416e566952fd36537dd468821f2e3d58ba328",
+  "sizeBytes": 57759773,
+  "publishedAt": "2026-11-26T21:19:40Z",
   "certificateSha256": "bd3062fd35e97bec46269c44e32e2daf32ad5a9a9afabe8054f5c1f83ce95578"
 }
