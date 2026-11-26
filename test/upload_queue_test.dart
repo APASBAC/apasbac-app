@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:apasbac_app/core/services/capture_attestation.dart';
 import 'package:apasbac_app/core/services/monitoring_upload_queue.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,6 +10,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 XFile file(String name) =>
     XFile.fromData(Uint8List.fromList([1, 2, 3]), name: name);
+
+CapturedFile captured(String name, String kind) => CapturedFile(
+    file(name),
+    CaptureProof(
+        kind: kind,
+        md5: '5289df737df57326fcdd22597afb1fac',
+        capturedAt: '2026-11-26T12:00:00.000Z',
+        signature: List.filled(64, 'a').join()));
 
 class Recorder implements UploadNotifier {
   final events = <String>[];
@@ -47,12 +56,15 @@ void main() {
       q.enqueue(
           monitoringId: id,
           animalName: 'Bolt',
-          video: file('video.mp4'),
-          images: [for (var i = 0; i < 5; i++) file('f$i.jpg')]);
+          video: captured('video.mp4', 'video'),
+          images: [for (var i = 0; i < 5; i++) captured('f$i.jpg', 'image')],
+          captureToken: 'token-de-captura');
 
   test('envia em segundo plano, registra na API e avisa ao terminar', () async {
     final uploaded = <String>[];
     List<String>? sentImages;
+    String? sentToken;
+    List<Map<String, dynamic>>? sentMedia;
     String? sentVideo;
     final notes = Recorder();
     String? finished;
@@ -64,9 +76,11 @@ void main() {
         uploaded.add(path);
         return 'https://res.cloudinary.com/x/${path.split('/').last}';
       },
-      finish: (id, video, images) async {
+      finish: (id, video, images, token, media) async {
         sentVideo = video;
         sentImages = images;
+        sentToken = token;
+        sentMedia = media;
       },
     )..onFinished = (id) => finished = id;
 
@@ -76,6 +90,12 @@ void main() {
     expect(uploaded.length, 6);
     expect(sentVideo, contains('/video.'));
     expect(sentImages, hasLength(5));
+    // Atestado de captura vai junto, um por URL, com a URL enviada.
+    expect(sentToken, 'token-de-captura');
+    expect(sentMedia, hasLength(6));
+    expect(sentMedia!.first['url'], sentVideo);
+    expect(sentMedia!.first['kind'], 'video');
+    expect(sentMedia!.skip(1).every((m) => m['kind'] == 'image'), isTrue);
     expect(finished, 'm1');
     expect(q.jobs, isEmpty);
     expect(notes.events, containsAllInOrder(['progress', 'done', 'stop']));
@@ -94,7 +114,7 @@ void main() {
         if (video && failNext-- > 0) throw offline();
         return 'https://res.cloudinary.com/x/1';
       },
-      finish: (id, video, images) async {},
+      finish: (id, video, images, token, media) async {},
     );
     await enqueue(q);
     await settle(q);
@@ -112,7 +132,7 @@ void main() {
       directory: () async => tmp,
       notifier: notes,
       upload: (path, {required video, onProgress}) async => 'https://u/1',
-      finish: (id, video, images) async {
+      finish: (id, video, images, token, media) async {
         if (reject) {
           throw DioException(
               requestOptions: RequestOptions(),
@@ -144,7 +164,7 @@ void main() {
         if (video) throw const FileSystemException('app encerrado');
         return 'https://u/${path.split('/').last}';
       },
-      finish: (id, video, images) async {},
+      finish: (id, video, images, token, media) async {},
     );
     await enqueue(blocked);
     await settle(blocked);
@@ -161,7 +181,7 @@ void main() {
         uploads.add(path);
         return 'https://u/v';
       },
-      finish: (id, video, images) async {},
+      finish: (id, video, images, token, media) async {},
     );
     await reopened.resume();
     await settle(reopened);
@@ -176,10 +196,37 @@ void main() {
       directory: () async => tmp,
       upload: (path, {required video, onProgress}) =>
           Future.delayed(const Duration(seconds: 5), () => 'u'),
-      finish: (id, video, images) async {},
+      finish: (id, video, images, token, media) async {},
     );
     await enqueue(q);
     expect(() => enqueue(q), throwsStateError);
     await q.clearAll();
+  });
+
+  test(
+      'envio salvo por versão antiga (sem atestado) falha pedindo nova gravação',
+      () async {
+    final prefs = await SharedPreferences.getInstance();
+    final dir = Directory('${tmp.path}/old')..createSync();
+    final paths = [
+      for (final n in ['v.mp4', 'a.jpg'])
+        (File('${dir.path}/$n')..writeAsBytesSync([1])).path
+    ];
+    await prefs.setString('monitoring_upload_jobs',
+        '[{"monitoringId":"m9","animalName":"Mel","videoPath":"${paths[0]}","imagePaths":["${paths[1]}"],"uploaded":{},"status":"queued","progress":0}]');
+    var uploads = 0;
+    final q = MonitoringUploadQueue(
+      directory: () async => tmp,
+      upload: (path, {required video, onProgress}) async {
+        uploads++;
+        return 'u';
+      },
+      finish: (id, video, images, token, media) async {},
+    );
+    await q.resume();
+    await settle(q);
+    expect(uploads, 0, reason: 'nada sobe sem atestado');
+    expect(q.jobFor('m9')!.status, UploadStatus.failed);
+    expect(q.jobFor('m9')!.error, contains('câmera do aplicativo'));
   });
 }

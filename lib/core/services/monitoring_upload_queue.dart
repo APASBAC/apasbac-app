@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/friendly_error.dart';
+import 'capture_attestation.dart';
 import 'monitoring_service.dart';
 import 'storage_service.dart';
 
@@ -24,6 +25,10 @@ class UploadJob {
 
   /// Caminho local → URL já enviada (não reenvia ao retomar).
   final Map<String, String> uploaded;
+
+  /// Sessão de captura e atestado de cada arquivo (gravado pela câmera do app).
+  final String? captureToken;
+  final Map<String, CaptureProof> proofs;
   UploadStatus status;
   double progress;
   String? error;
@@ -34,10 +39,17 @@ class UploadJob {
     required this.videoPath,
     required this.imagePaths,
     Map<String, String>? uploaded,
+    this.captureToken,
+    Map<String, CaptureProof>? proofs,
     this.status = UploadStatus.queued,
     this.progress = 0,
     this.error,
-  }) : uploaded = uploaded ?? {};
+  })  : uploaded = uploaded ?? {},
+        proofs = proofs ?? {};
+
+  /// Envio criado por versão antiga do app (sem atestado): não é mais aceito.
+  bool get attested =>
+      captureToken != null && files.every((f) => proofs.containsKey(f));
 
   List<String> get files => [...imagePaths, videoPath];
   bool get active => status != UploadStatus.failed;
@@ -48,6 +60,8 @@ class UploadJob {
         'videoPath': videoPath,
         'imagePaths': imagePaths,
         'uploaded': uploaded,
+        'captureToken': captureToken,
+        'proofs': proofs.map((k, v) => MapEntry(k, v.toJson())),
         'status': status.name,
         'progress': progress,
         'error': error,
@@ -59,6 +73,10 @@ class UploadJob {
         videoPath: j['videoPath'] as String,
         imagePaths: List<String>.from(j['imagePaths'] as List),
         uploaded: Map<String, String>.from((j['uploaded'] as Map?) ?? {}),
+        captureToken: j['captureToken'] as String?,
+        proofs: ((j['proofs'] as Map?) ?? {}).map((k, v) => MapEntry(
+            k as String,
+            CaptureProof.fromJson(Map<String, dynamic>.from(v as Map)))),
         status: UploadStatus.values.firstWhere((s) => s.name == j['status'],
             orElse: () => UploadStatus.queued),
         progress: (j['progress'] as num?)?.toDouble() ?? 0,
@@ -92,7 +110,11 @@ class SilentUploadNotifier implements UploadNotifier {
 typedef UploadFile = Future<String> Function(String path,
     {required bool video, void Function(double)? onProgress});
 typedef FinishSubmit = Future<void> Function(
-    String monitoringId, String videoUrl, List<String> imageUrls);
+    String monitoringId,
+    String videoUrl,
+    List<String> imageUrls,
+    String captureToken,
+    List<Map<String, dynamic>> media);
 
 /// Fila de envio dos monitoramentos.
 ///
@@ -168,9 +190,17 @@ class MonitoringUploadQueue extends ChangeNotifier {
   }
 
   static Future<void> _defaultFinish(
-          String id, String videoUrl, List<String> imageUrls) =>
+          String id,
+          String videoUrl,
+          List<String> imageUrls,
+          String captureToken,
+          List<Map<String, dynamic>> media) =>
       MonitoringService().finishSubmit(
-          monitoringId: id, videoUrl: videoUrl, imageUrls: imageUrls);
+          monitoringId: id,
+          videoUrl: videoUrl,
+          imageUrls: imageUrls,
+          captureToken: captureToken,
+          media: media);
 
   Future<void> _load() async {
     if (_loaded) return;
@@ -201,8 +231,9 @@ class MonitoringUploadQueue extends ChangeNotifier {
   Future<void> enqueue({
     required String monitoringId,
     required String animalName,
-    required XFile video,
-    required List<XFile> images,
+    required CapturedFile video,
+    required List<CapturedFile> images,
+    required String captureToken,
   }) async {
     await _load();
     final existing = jobFor(monitoringId);
@@ -211,18 +242,21 @@ class MonitoringUploadQueue extends ChangeNotifier {
     }
     if (existing != null) await _discard(existing);
     for (final f in [...images, video]) {
-      if (await f.length() == 0) throw ArgumentError('Arquivo vazio.');
+      if (await f.file.length() == 0) throw ArgumentError('Arquivo vazio.');
     }
+    final proofs = <String, CaptureProof>{};
     final base = await _directory();
     final dir = Directory(
         '${base.path}/monitoring_uploads/${monitoringId.replaceAll(RegExp(r'[^\w-]'), '_')}');
     if (dir.existsSync()) dir.deleteSync(recursive: true);
     dir.createSync(recursive: true);
-    Future<String> keep(XFile f, String name) async {
+    Future<String> keep(CapturedFile c, String name) async {
+      final f = c.file;
       final source = f.name.isNotEmpty ? f.name : f.path;
       final ext = source.contains('.') ? source.split('.').last : 'bin';
       final target = '${dir.path}/$name.$ext';
       await f.saveTo(target);
+      proofs[target] = c.proof;
       return target;
     }
 
@@ -235,6 +269,8 @@ class MonitoringUploadQueue extends ChangeNotifier {
       animalName: animalName,
       videoPath: await keep(video, 'video'),
       imagePaths: imagePaths,
+      captureToken: captureToken,
+      proofs: proofs,
     );
     _jobs.add(job);
     await _save();
@@ -328,6 +364,10 @@ class MonitoringUploadQueue extends ChangeNotifier {
           ..error = null;
         notifyListeners();
         await _notifier.progress(job);
+        if (!job.attested) {
+          throw StateError(
+              'Grave as fotos e o vídeo de novo pela câmera do aplicativo.');
+        }
         final files = job.files;
         for (var i = 0; i < files.length; i++) {
           final path = files[i];
@@ -352,8 +392,16 @@ class MonitoringUploadQueue extends ChangeNotifier {
           await _save();
           notifyListeners();
         }
-        await _finish(job.monitoringId, job.uploaded[job.videoPath]!,
-            [for (final p in job.imagePaths) job.uploaded[p]!]);
+        await _finish(
+          job.monitoringId,
+          job.uploaded[job.videoPath]!,
+          [for (final p in job.imagePaths) job.uploaded[p]!],
+          job.captureToken!,
+          [
+            for (final p in [job.videoPath, ...job.imagePaths])
+              job.proofs[p]!.forUrl(job.uploaded[p]!)
+          ],
+        );
         job.progress = 1;
         await _discard(job);
         notifyListeners();

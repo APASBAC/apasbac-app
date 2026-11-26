@@ -37,8 +37,8 @@ class MonitoringDetailScreen extends ConsumerWidget {
               tooltip: 'Apagar monitoramento',
               icon: const Icon(Icons.delete_outline_rounded),
               onPressed: () async {
-                final deleted =
-                    await confirmAndDeleteMonitoring(context, ref, mAsync.value!);
+                final deleted = await confirmAndDeleteMonitoring(
+                    context, ref, mAsync.value!);
                 if (deleted && context.mounted) context.pop();
               },
             ),

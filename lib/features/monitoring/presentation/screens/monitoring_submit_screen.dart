@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 import '../../../../providers.dart';
 import '../widgets/upload_status_card.dart';
+import '../../../../core/services/capture_attestation.dart';
 
 class MonitoringSubmitScreen extends ConsumerStatefulWidget {
   final String monitoringId;
@@ -21,46 +22,80 @@ class MonitoringSubmitScreen extends ConsumerStatefulWidget {
 class _MonitoringSubmitScreenState
     extends ConsumerState<MonitoringSubmitScreen> {
   final _picker = ImagePicker();
-  XFile? _video;
-  final List<XFile> _images = [];
+  CapturedFile? _video;
+  final List<CapturedFile> _images = [];
   bool _loading = false;
+  bool _capturing = false;
   String? _error;
+
+  /// Sessão de captura: sem ela não dá para gravar (a API recusaria o envio).
+  CaptureSession? _session;
+  Object? _sessionError;
 
   static const int _maxImages = 5;
 
-  Future<void> _pickVideo() async {
-    final picked = await _picker.pickVideo(
-      source: ImageSource.gallery,
-      maxDuration: const Duration(minutes: 5),
-    );
-    if (picked != null && mounted) {
-      setState(() => _video = picked);
+  @override
+  void initState() {
+    super.initState();
+    _loadSession();
+  }
+
+  Future<void> _loadSession() async {
+    setState(() {
+      _session = null;
+      _sessionError = null;
+    });
+    try {
+      final s = await ref
+          .read(monitoringServiceProvider)
+          .captureSession(widget.monitoringId);
+      if (mounted) setState(() => _session = s);
+    } catch (e) {
+      if (mounted) setState(() => _sessionError = e);
     }
   }
 
-  Future<void> _pickImages() async {
-    if (_images.length >= _maxImages) {
-      _showSnack('Máximo de $_maxImages imagens atingido');
-      return;
+  /// Grava pela câmera e assina na hora. Galeria e outros apps não são aceitos.
+  Future<CapturedFile?> _capture(
+      Future<XFile?> Function() open, String kind) async {
+    final session = _session;
+    if (session == null || _capturing) return null;
+    setState(() {
+      _capturing = true;
+      _error = null;
+    });
+    try {
+      final file = await open();
+      if (file == null) return null;
+      return await attestCapture(file, kind: kind, session: session);
+    } catch (e) {
+      if (mounted)
+        setState(() =>
+            _error = 'Não foi possível usar a câmera. ${friendlyMessage(e)}');
+      return null;
+    } finally {
+      if (mounted) setState(() => _capturing = false);
     }
-    final remaining = _maxImages - _images.length;
-    final picked = await _picker.pickMultiImage(imageQuality: 80);
-    if (picked.isNotEmpty && mounted) {
-      final toAdd = picked.take(remaining).toList();
-      setState(() => _images.addAll(toAdd));
-    }
+  }
+
+  Future<void> _recordVideo() async {
+    final c = await _capture(
+        () => _picker.pickVideo(
+            source: ImageSource.camera,
+            maxDuration: const Duration(minutes: 3)),
+        'video');
+    if (c != null && mounted) setState(() => _video = c);
   }
 
   Future<void> _takePhoto() async {
     if (_images.length >= _maxImages) {
-      _showSnack('Máximo de $_maxImages imagens atingido');
+      _showSnack('Máximo de $_maxImages fotos atingido');
       return;
     }
-    final picked =
-        await _picker.pickImage(source: ImageSource.camera, imageQuality: 80);
-    if (picked != null && mounted) {
-      setState(() => _images.add(picked));
-    }
+    final c = await _capture(
+        () => _picker.pickImage(source: ImageSource.camera, imageQuality: 80),
+        'image');
+    if (c != null && mounted) setState(() => _images.add(c));
   }
 
   void _removeImage(int index) {
@@ -109,11 +144,21 @@ class _MonitoringSubmitScreenState
           .valueOrNull
           ?.animal
           ?.name;
+      final session = _session;
+      if (session == null || session.expired) {
+        setState(() => _error =
+            'A sessão de gravação expirou. Grave as fotos e o vídeo novamente.');
+        _video = null;
+        _images.clear();
+        await _loadSession();
+        return;
+      }
       await ref.read(uploadQueueProvider).enqueue(
             monitoringId: widget.monitoringId,
             animalName: animal ?? '',
             video: _video!,
             images: List.of(_images),
+            captureToken: session.token,
           );
 
       if (mounted) {
@@ -136,6 +181,8 @@ class _MonitoringSubmitScreenState
       if (mounted) setState(() => _loading = false);
     }
   }
+
+  bool get _canCapture => _session != null && !_loading && !_capturing;
 
   void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
@@ -174,7 +221,8 @@ class _MonitoringSubmitScreenState
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Envie um vídeo e exatamente 5 fotos mostrando como o animal está.',
+                      'Grave um vídeo e tire 5 fotos agora, pela câmera do aplicativo, mostrando como o animal está. '
+                      'Fotos e vídeos da galeria ou de outros apps não são aceitos.',
                       style:
                           TextStyle(fontSize: 13, color: cs.onPrimaryContainer),
                     ),
@@ -182,6 +230,38 @@ class _MonitoringSubmitScreenState
                 ],
               ),
             ),
+            if (_session == null) ...[
+              const SizedBox(height: 16),
+              _sessionError == null
+                  ? const Row(children: [
+                      SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2)),
+                      SizedBox(width: 10),
+                      Text('Preparando a câmera segura…'),
+                    ])
+                  : Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: cs.errorContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                                'Não foi possível liberar a câmera. ${friendlyMessage(_sessionError!)}',
+                                style: TextStyle(color: cs.onErrorContainer)),
+                            const SizedBox(height: 8),
+                            TextButton.icon(
+                              onPressed: _loadSession,
+                              icon: const Icon(Icons.refresh_rounded),
+                              label: const Text('Tentar de novo'),
+                            ),
+                          ]),
+                    ),
+            ],
             const SizedBox(height: 28),
 
             // ── Seção vídeo ────────────────────────────
@@ -193,9 +273,9 @@ class _MonitoringSubmitScreenState
                         TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 if (_video == null)
                   TextButton.icon(
-                    onPressed: _loading ? null : _pickVideo,
-                    icon: const Icon(Icons.video_library_outlined, size: 18),
-                    label: const Text('Selecionar'),
+                    onPressed: _canCapture ? _recordVideo : null,
+                    icon: const Icon(Icons.videocam_rounded, size: 18),
+                    label: const Text('Gravar'),
                   ),
               ],
             ),
@@ -203,12 +283,12 @@ class _MonitoringSubmitScreenState
             if (_video == null)
               _PickerPlaceholder(
                 icon: Icons.videocam_outlined,
-                label: 'Toque para adicionar um vídeo',
-                onTap: _loading ? null : _pickVideo,
+                label: 'Toque para gravar o vídeo',
+                onTap: _canCapture ? _recordVideo : null,
               )
             else
               _VideoPreviewTile(
-                file: _video!,
+                file: _video!.file,
                 onRemove: _loading ? null : _removeVideo,
               ),
 
@@ -233,19 +313,16 @@ class _MonitoringSubmitScreenState
             const SizedBox(height: 10),
             if (_images.isEmpty)
               _PickerPlaceholder(
-                icon: Icons.photo_outlined,
-                label: 'Toque para adicionar 5 fotos obrigatórias',
-                onTap: _loading ? null : _pickImages,
+                icon: Icons.camera_alt_outlined,
+                label: 'Toque para tirar as 5 fotos obrigatórias',
+                onTap: _canCapture ? _takePhoto : null,
               )
             else
               _ImageGrid(
-                images: _images,
+                images: [for (final c in _images) c.file],
                 maxImages: _maxImages,
                 onRemove: _loading ? null : _removeImage,
-                onAdd: _images.length < _maxImages && !_loading
-                    ? _pickImages
-                    : null,
-                onAddCamera: _images.length < _maxImages && !_loading
+                onAddCamera: _images.length < _maxImages && _canCapture
                     ? _takePhoto
                     : null,
               ),
@@ -410,14 +487,12 @@ class _ImageGrid extends StatelessWidget {
   final List<XFile> images;
   final int maxImages;
   final void Function(int)? onRemove;
-  final VoidCallback? onAdd;
   final VoidCallback? onAddCamera;
 
   const _ImageGrid({
     required this.images,
     required this.maxImages,
     this.onRemove,
-    this.onAdd,
     this.onAddCamera,
   });
 
@@ -474,7 +549,7 @@ class _ImageGrid extends StatelessWidget {
               // Slot vazio
               final isNextEmpty = i == images.length;
               return GestureDetector(
-                onTap: isNextEmpty ? onAdd : null,
+                onTap: isNextEmpty ? onAddCamera : null,
                 child: Container(
                   decoration: BoxDecoration(
                     color: isNextEmpty
@@ -493,7 +568,7 @@ class _ImageGrid extends StatelessWidget {
                     children: [
                       Icon(
                         isNextEmpty
-                            ? Icons.add_photo_alternate_outlined
+                            ? Icons.add_a_photo_outlined
                             : Icons.photo_outlined,
                         size: 26,
                         color: isNextEmpty
@@ -551,28 +626,6 @@ class _ImageGrid extends StatelessWidget {
                   ),
                 ),
               const SizedBox(width: 8),
-              if (onAdd != null)
-                GestureDetector(
-                  onTap: onAdd,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: cs.primary,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.photo_library_outlined,
-                            size: 14, color: cs.onPrimary),
-                        const SizedBox(width: 4),
-                        Text('Galeria',
-                            style:
-                                TextStyle(fontSize: 12, color: cs.onPrimary)),
-                      ],
-                    ),
-                  ),
-                ),
             ],
           ),
         ],

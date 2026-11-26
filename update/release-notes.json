@@ -1,8 +1,9 @@
 {
-  "minimumSupportedVersionCode": 1,
+  "minimumSupportedVersionCode": 19,
   "mandatory": false,
   "releaseNotes": [
-    "Administração: o Admin pode apagar um monitoramento (com as fotos e o vídeo) pela aba Validações ou pela tela do monitoramento, com confirmação.",
-    "Novo visualizador de fotos e vídeo do monitoramento em tela cheia."
+    "Monitoramento: fotos e vídeo agora só podem ser gravados pela câmera do aplicativo (a galeria foi removida).",
+    "Cada foto e vídeo é assinado no momento da gravação; a APASBAC só aceita mídias gravadas pelo app.",
+    "Esta atualização é obrigatória para enviar novos monitoramentos."
   ]
 }

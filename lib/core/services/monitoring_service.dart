@@ -6,6 +6,7 @@ import '../api/api_client.dart';
 import '../models/monitoring_model.dart';
 import '../models/animal_model.dart';
 import 'animal_service.dart';
+import 'capture_attestation.dart';
 import 'paged.dart';
 
 class MonitoringService {
@@ -164,15 +165,29 @@ class MonitoringService {
     );
   }
 
-  /// Última etapa do envio: registra na API as URLs já enviadas ao storage.
+  /// Sessão de captura: chave temporária para assinar cada foto/vídeo gravado.
+  Future<CaptureSession> captureSession(String monitoringId) async {
+    final response =
+        await api.post('/monitoring/$monitoringId/capture-session');
+    final body = response.data as Map;
+    final data = Map<String, dynamic>.from((body['data'] ?? body) as Map);
+    return CaptureSession.fromJson(monitoringId, data);
+  }
+
+  /// Última etapa do envio: registra na API as URLs já enviadas ao storage,
+  /// com o atestado de captura de cada mídia.
   Future<void> finishSubmit({
     required String monitoringId,
     required String videoUrl,
     required List<String> imageUrls,
+    required String captureToken,
+    required List<Map<String, dynamic>> media,
   }) async {
     await api.post('/monitoring/$monitoringId/submit', data: {
       'videoUrl': videoUrl,
       'imageUrls': imageUrls,
+      'captureToken': captureToken,
+      'media': media,
     });
   }
 
