@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "channel": "stable",
-  "versionCode": 19,
-  "versionName": "1.0.16-alpha",
+  "versionCode": 20,
+  "versionName": "1.0.17-alpha",
   "minimumSupportedVersionCode": 19,
   "mandatory": false,
   "releaseNotes": [
-    "Monitoramento: fotos e vídeo agora só podem ser gravados pela câmera do aplicativo (a galeria foi removida).",
-    "Cada foto e vídeo é assinado no momento da gravação; a APASBAC só aceita mídias gravadas pelo app.",
-    "Esta atualização é obrigatória para enviar novos monitoramentos."
+    "Corrigido o envio do monitoramento recusado com \"um dos arquivos enviados não é o que foi gravado\".",
+    "Fotos em sequência: ao tirar uma foto, a câmera já abre para a próxima até completar as 5.",
+    "Se um envio antigo não puder ser aceito, o app pede para gravar de novo."
   ],
-  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.16-alpha/app-release.apk",
-  "sha256": "5a17f53eeb6fecbb9830f687b89416e566952fd36537dd468821f2e3d58ba328",
+  "apkUrl": "https://github.com/APASBAC/apasbac-app/releases/download/v1.0.17-alpha/app-release.apk",
+  "sha256": "3831f546b4f4a1bed6fd52086b450dc9a6d688ecfab6cbde6c7fec6cebafdba5",
   "sizeBytes": 57759773,
-  "publishedAt": "2026-11-26T21:19:40Z",
+  "publishedAt": "2026-11-27T12:47:55Z",
   "certificateSha256": "bd3062fd35e97bec46269c44e32e2daf32ad5a9a9afabe8054f5c1f83ce95578"
 }
