@@ -28,6 +28,12 @@ class UploadJob {
 
   /// Sessão de captura e atestado de cada arquivo (gravado pela câmera do app).
   final String? captureToken;
+
+  /// Chave da sessão: assina a ligação arquivo gravado → etag do Cloudinary.
+  final String? captureKey;
+
+  /// Caminho local → etag devolvido pelo Cloudinary no upload.
+  final Map<String, String> etags;
   final Map<String, CaptureProof> proofs;
   UploadStatus status;
   double progress;
@@ -40,16 +46,21 @@ class UploadJob {
     required this.imagePaths,
     Map<String, String>? uploaded,
     this.captureToken,
+    this.captureKey,
+    Map<String, String>? etags,
     Map<String, CaptureProof>? proofs,
     this.status = UploadStatus.queued,
     this.progress = 0,
     this.error,
   })  : uploaded = uploaded ?? {},
-        proofs = proofs ?? {};
+        proofs = proofs ?? {},
+        etags = etags ?? {};
 
   /// Envio criado por versão antiga do app (sem atestado): não é mais aceito.
   bool get attested =>
-      captureToken != null && files.every((f) => proofs.containsKey(f));
+      captureToken != null &&
+      captureKey != null &&
+      files.every((f) => proofs.containsKey(f));
 
   List<String> get files => [...imagePaths, videoPath];
   bool get active => status != UploadStatus.failed;
@@ -61,6 +72,8 @@ class UploadJob {
         'imagePaths': imagePaths,
         'uploaded': uploaded,
         'captureToken': captureToken,
+        'captureKey': captureKey,
+        'etags': etags,
         'proofs': proofs.map((k, v) => MapEntry(k, v.toJson())),
         'status': status.name,
         'progress': progress,
@@ -74,6 +87,8 @@ class UploadJob {
         imagePaths: List<String>.from(j['imagePaths'] as List),
         uploaded: Map<String, String>.from((j['uploaded'] as Map?) ?? {}),
         captureToken: j['captureToken'] as String?,
+        captureKey: j['captureKey'] as String?,
+        etags: Map<String, String>.from((j['etags'] as Map?) ?? {}),
         proofs: ((j['proofs'] as Map?) ?? {}).map((k, v) => MapEntry(
             k as String,
             CaptureProof.fromJson(Map<String, dynamic>.from(v as Map)))),
@@ -107,7 +122,7 @@ class SilentUploadNotifier implements UploadNotifier {
   Future<void> failed(UploadJob job) async {}
 }
 
-typedef UploadFile = Future<String> Function(String path,
+typedef UploadFile = Future<UploadedFile> Function(String path,
     {required bool video, void Function(double)? onProgress});
 typedef FinishSubmit = Future<void> Function(
     String monitoringId,
@@ -180,9 +195,9 @@ class MonitoringUploadQueue extends ChangeNotifier {
     return getApplicationSupportDirectory();
   }
 
-  static Future<String> _defaultUpload(String path,
+  static Future<UploadedFile> _defaultUpload(String path,
       {required bool video, void Function(double)? onProgress}) {
-    return StorageService().upload(XFile(path),
+    return StorageService().uploadDetailed(XFile(path),
         folder: video ? 'monitoring/videos' : 'monitoring/images',
         resourceType: video ? 'video' : 'image', onProgress: (sent, total) {
       if (total > 0) onProgress?.call(sent / total);
@@ -234,6 +249,7 @@ class MonitoringUploadQueue extends ChangeNotifier {
     required CapturedFile video,
     required List<CapturedFile> images,
     required String captureToken,
+    required String captureKey,
   }) async {
     await _load();
     final existing = jobFor(monitoringId);
@@ -270,6 +286,7 @@ class MonitoringUploadQueue extends ChangeNotifier {
       videoPath: await keep(video, 'video'),
       imagePaths: imagePaths,
       captureToken: captureToken,
+      captureKey: captureKey,
       proofs: proofs,
     );
     _jobs.add(job);
@@ -355,6 +372,22 @@ class MonitoringUploadQueue extends ChangeNotifier {
     }
   }
 
+  /// Atestado da captura + ligação com o etag que o Cloudinary devolveu, para a
+  /// API conferir o arquivo guardado sem depender do formato do etag.
+  Map<String, dynamic> _mediaFor(UploadJob job, String path) {
+    final url = job.uploaded[path]!;
+    final proof = job.proofs[path]!;
+    final item = proof.forUrl(url);
+    final etag = job.etags[path];
+    final key = job.captureKey;
+    if (etag != null && key != null) {
+      item['uploadEtag'] = etag;
+      item['uploadSignature'] =
+          uploadSignature(key, proof.md5, etag, url, job.monitoringId);
+    }
+    return item;
+  }
+
   Future<void> _run(UploadJob job) async {
     var attempt = 0;
     while (_enabled && _jobs.contains(job)) {
@@ -376,7 +409,7 @@ class MonitoringUploadQueue extends ChangeNotifier {
             throw FileSystemException('Arquivo ausente', path);
           }
           var lastShown = -1;
-          final url = await _upload(path, video: path == job.videoPath,
+          final result = await _upload(path, video: path == job.videoPath,
               onProgress: (p) {
             // Etapas: cada arquivo vale 1/(n+1); o registro final, o restante.
             job.progress = (i + p) / (files.length + 1);
@@ -387,7 +420,8 @@ class MonitoringUploadQueue extends ChangeNotifier {
               unawaited(_notifier.progress(job));
             }
           });
-          job.uploaded[path] = url;
+          job.uploaded[path] = result.url;
+          if (result.etag != null) job.etags[path] = result.etag!;
           job.progress = (i + 1) / (files.length + 1);
           await _save();
           notifyListeners();
@@ -399,7 +433,7 @@ class MonitoringUploadQueue extends ChangeNotifier {
           job.captureToken!,
           [
             for (final p in [job.videoPath, ...job.imagePaths])
-              job.proofs[p]!.forUrl(job.uploaded[p]!)
+              _mediaFor(job, p)
           ],
         );
         job.progress = 1;

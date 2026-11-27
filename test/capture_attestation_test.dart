@@ -35,4 +35,11 @@ void main() {
         'a8e63d191f4090a4dec8dc918921e56e2ccb347355fe7a5db0c3499f736fa533');
     expect(c.proof.forUrl('https://x/v.mp4')['url'], 'https://x/v.mp4');
   });
+
+  test('assinatura do upload igual à da API (referência Node/crypto)', () {
+    expect(
+        uploadSignature('chave-teste', '0cc175b9c0f1b6a831c399e269772661',
+            '9e107d9d372bb6826bd81d3542a419d6', 'https://x/v.mp4', 'm1'),
+        '803bf116d7545b16557eee13916e1f465f312f60f880da7802b55110a71e796c');
+  });
 }

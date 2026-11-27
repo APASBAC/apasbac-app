@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:apasbac_app/core/services/capture_attestation.dart';
 import 'package:apasbac_app/core/services/monitoring_upload_queue.dart';
+import 'package:apasbac_app/core/services/storage_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
@@ -58,7 +59,8 @@ void main() {
           animalName: 'Bolt',
           video: captured('video.mp4', 'video'),
           images: [for (var i = 0; i < 5; i++) captured('f$i.jpg', 'image')],
-          captureToken: 'token-de-captura');
+          captureToken: 'token-de-captura',
+          captureKey: 'chave-teste');
 
   test('envia em segundo plano, registra na API e avisa ao terminar', () async {
     final uploaded = <String>[];
@@ -74,7 +76,8 @@ void main() {
       upload: (path, {required video, onProgress}) async {
         onProgress?.call(1);
         uploaded.add(path);
-        return 'https://res.cloudinary.com/x/${path.split('/').last}';
+        return UploadedFile(
+            'https://res.cloudinary.com/x/${path.split('/').last}', null);
       },
       finish: (id, video, images, token, media) async {
         sentVideo = video;
@@ -112,7 +115,7 @@ void main() {
       upload: (path, {required video, onProgress}) async {
         calls[path] = (calls[path] ?? 0) + 1;
         if (video && failNext-- > 0) throw offline();
-        return 'https://res.cloudinary.com/x/1';
+        return UploadedFile('https://res.cloudinary.com/x/1', null);
       },
       finish: (id, video, images, token, media) async {},
     );
@@ -131,7 +134,8 @@ void main() {
     final q = MonitoringUploadQueue(
       directory: () async => tmp,
       notifier: notes,
-      upload: (path, {required video, onProgress}) async => 'https://u/1',
+      upload: (path, {required video, onProgress}) async =>
+          const UploadedFile('https://u/1', null),
       finish: (id, video, images, token, media) async {
         if (reject) {
           throw DioException(
@@ -162,7 +166,7 @@ void main() {
       retryDelays: const [],
       upload: (path, {required video, onProgress}) async {
         if (video) throw const FileSystemException('app encerrado');
-        return 'https://u/${path.split('/').last}';
+        return UploadedFile('https://u/${path.split('/').last}', null);
       },
       finish: (id, video, images, token, media) async {},
     );
@@ -179,7 +183,7 @@ void main() {
       directory: () async => tmp,
       upload: (path, {required video, onProgress}) async {
         uploads.add(path);
-        return 'https://u/v';
+        return UploadedFile('https://u/v', null);
       },
       finish: (id, video, images, token, media) async {},
     );
@@ -194,8 +198,8 @@ void main() {
       () async {
     final q = MonitoringUploadQueue(
       directory: () async => tmp,
-      upload: (path, {required video, onProgress}) =>
-          Future.delayed(const Duration(seconds: 5), () => 'u'),
+      upload: (path, {required video, onProgress}) => Future.delayed(
+          const Duration(seconds: 5), () => const UploadedFile('u', null)),
       finish: (id, video, images, token, media) async {},
     );
     await enqueue(q);
@@ -219,7 +223,7 @@ void main() {
       directory: () async => tmp,
       upload: (path, {required video, onProgress}) async {
         uploads++;
-        return 'u';
+        return UploadedFile('u', null);
       },
       finish: (id, video, images, token, media) async {},
     );
@@ -228,5 +232,32 @@ void main() {
     expect(uploads, 0, reason: 'nada sobe sem atestado');
     expect(q.jobFor('m9')!.status, UploadStatus.failed);
     expect(q.jobFor('m9')!.error, contains('câmera do aplicativo'));
+  });
+
+  test('com o etag do Cloudinary, o app assina a ligação arquivo → upload',
+      () async {
+    List<Map<String, dynamic>>? sent;
+    final q = MonitoringUploadQueue(
+      directory: () async => tmp,
+      upload: (path, {required video, onProgress}) async => UploadedFile(
+          'https://u/${path.split('/').last}',
+          '9e107d9d372bb6826bd81d3542a419d6'),
+      finish: (id, video, images, token, media) async => sent = media,
+    );
+    await q.enqueue(
+        monitoringId: 'm1',
+        animalName: 'Bolt',
+        video: captured('video.mp4', 'video'),
+        images: [for (var i = 0; i < 5; i++) captured('f$i.jpg', 'image')],
+        captureToken: 'token-de-captura',
+        captureKey: 'chave-teste');
+    await settle(q);
+    expect(sent, hasLength(6));
+    final video = sent!.first;
+    expect(video['uploadEtag'], '9e107d9d372bb6826bd81d3542a419d6');
+    expect(
+        video['uploadSignature'],
+        uploadSignature('chave-teste', video['md5'] as String,
+            '9e107d9d372bb6826bd81d3542a419d6', video['url'] as String, 'm1'));
   });
 }

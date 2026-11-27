@@ -87,15 +87,29 @@ class _MonitoringSubmitScreenState
     if (c != null && mounted) setState(() => _video = c);
   }
 
+  /// Abre a câmera em sequência até completar as 5 fotos: tirou uma, a próxima
+  /// já abre. Cancelar na câmera interrompe (dá para continuar depois).
   Future<void> _takePhoto() async {
     if (_images.length >= _maxImages) {
-      _showSnack('Máximo de $_maxImages fotos atingido');
+      _showSnack('As $_maxImages fotos já foram tiradas');
       return;
     }
-    final c = await _capture(
-        () => _picker.pickImage(source: ImageSource.camera, imageQuality: 80),
-        'image');
-    if (c != null && mounted) setState(() => _images.add(c));
+    while (mounted && _images.length < _maxImages) {
+      final c = await _capture(
+          () => _picker.pickImage(source: ImageSource.camera, imageQuality: 80),
+          'image');
+      if (c == null || !mounted) break;
+      setState(() => _images.add(c));
+      final left = _maxImages - _images.length;
+      if (left > 0) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          duration: const Duration(milliseconds: 1200),
+          content: Text(
+              'Foto ${_images.length} de $_maxImages salva. Abrindo a câmera para a próxima…'),
+        ));
+      }
+    }
   }
 
   void _removeImage(int index) {
@@ -159,6 +173,7 @@ class _MonitoringSubmitScreenState
             video: _video!,
             images: List.of(_images),
             captureToken: session.token,
+            captureKey: session.key,
           );
 
       if (mounted) {
@@ -314,7 +329,7 @@ class _MonitoringSubmitScreenState
             if (_images.isEmpty)
               _PickerPlaceholder(
                 icon: Icons.camera_alt_outlined,
-                label: 'Toque para tirar as 5 fotos obrigatórias',
+                label: 'Toque para tirar as 5 fotos em sequência',
                 onTap: _canCapture ? _takePhoto : null,
               )
             else

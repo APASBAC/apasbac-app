@@ -72,6 +72,14 @@ String captureSignature(String key, String kind, String md5Hex,
         .convert(utf8.encode('$kind|$md5Hex|$capturedAt|$monitoringId'))
         .toString();
 
+/// Liga o arquivo gravado (md5) ao etag que o Cloudinary devolveu no upload:
+/// HMAC-SHA256(chave, "upload|md5|etag|url|monitoringId"), igual à API.
+String uploadSignature(String key, String md5Hex, String etag, String url,
+        String monitoringId) =>
+    Hmac(sha256, utf8.encode(key))
+        .convert(utf8.encode('upload|$md5Hex|$etag|$url|$monitoringId'))
+        .toString();
+
 /// Assina o arquivo logo após a captura: MD5 do conteúdo (lido em fluxo, sem
 /// carregar o vídeo inteiro na memória) + horário + chave da sessão.
 Future<CapturedFile> attestCapture(XFile file,

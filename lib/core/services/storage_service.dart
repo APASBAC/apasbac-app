@@ -17,6 +17,17 @@ class StorageService {
                 sendTimeout: const Duration(minutes: 5)));
 
   Future<String> upload(XFile file,
+          {required String folder,
+          String resourceType = 'image',
+          ProgressCallback? onProgress}) async =>
+      (await uploadDetailed(file,
+              folder: folder,
+              resourceType: resourceType,
+              onProgress: onProgress))
+          .url;
+
+  /// Upload que devolve a URL e o etag que o Cloudinary calculou para o arquivo.
+  Future<UploadedFile> uploadDetailed(XFile file,
       {required String folder,
       String resourceType = 'image',
       ProgressCallback? onProgress}) async {
@@ -47,6 +58,14 @@ class StorageService {
     if (url == null || Uri.tryParse(url)?.scheme != 'https') {
       throw const FormatException('O upload não retornou uma URL segura.');
     }
-    return url;
+    final etag = uploaded.data['etag'];
+    return UploadedFile(url, etag is String ? etag.toLowerCase() : null);
   }
+}
+
+/// Resultado do upload: URL segura e etag do Cloudinary (quando informado).
+class UploadedFile {
+  final String url;
+  final String? etag;
+  const UploadedFile(this.url, this.etag);
 }

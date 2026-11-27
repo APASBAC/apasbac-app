@@ -2,8 +2,8 @@
   "minimumSupportedVersionCode": 19,
   "mandatory": false,
   "releaseNotes": [
-    "Monitoramento: fotos e vídeo agora só podem ser gravados pela câmera do aplicativo (a galeria foi removida).",
-    "Cada foto e vídeo é assinado no momento da gravação; a APASBAC só aceita mídias gravadas pelo app.",
-    "Esta atualização é obrigatória para enviar novos monitoramentos."
+    "Corrigido o envio do monitoramento recusado com \"um dos arquivos enviados não é o que foi gravado\".",
+    "Fotos em sequência: ao tirar uma foto, a câmera já abre para a próxima até completar as 5.",
+    "Se um envio antigo não puder ser aceito, o app pede para gravar de novo."
   ]
 }
